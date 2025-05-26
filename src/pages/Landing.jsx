@@ -35,7 +35,7 @@ const Landing = () => {
           DID with BitCoin UTXO
         </h1>
         <p className="text-xl text-slate-300 mb-6" style={{ marginBottom: '2.5rem' }}>
-          Based on UTXO of BitCoin, Non-Linear and Security.
+          Based on UTXO of BitCoin, Individual and Security.
         </p>
         <button
           onClick={handleLaunchDID}
