@@ -1171,6 +1171,67 @@ body::after {
   left: 100%;
 }
 
+.connect-wallet-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Wallet connected state */
+.wallet-connected {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(15, 25, 40, 0.8);
+  border: 1px solid var(--primary-cyan);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  backdrop-filter: blur(15px);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+}
+
+.wallet-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.wallet-label {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.wallet-address {
+  font-family: 'Orbitron', monospace;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--primary-cyan);
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+.disconnect-wallet-btn {
+  background: rgba(255, 0, 128, 0.2);
+  border: 1px solid var(--accent-pink);
+  color: var(--accent-pink);
+  font-family: 'Orbitron', monospace;
+  font-weight: 600;
+  font-size: 0.8rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.disconnect-wallet-btn:hover {
+  background: rgba(255, 0, 128, 0.3);
+  box-shadow: 0 0 15px rgba(255, 0, 128, 0.4);
+  transform: translateY(-1px);
+}
+
 /* Sci-fi content */
 .sci-fi-content {
   position: relative;
@@ -1727,6 +1788,21 @@ body::after {
     flex-direction: column;
     align-items: stretch;
     gap: 1rem;
+  }
+
+  .wallet-connected {
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+
+  .wallet-info {
+    text-align: center;
+  }
+
+  .disconnect-wallet-btn {
+    width: 100%;
+    padding: 0.5rem;
   }
 }
 
@@ -2792,5 +2868,551 @@ body::after {
   .save-notification .notification-text,
   .update-notification .notification-text {
     font-size: 0.8rem;
+  }
+}
+
+/* ===== INITIALIZE DID MODAL STYLES ===== */
+
+/* Modal overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* Modal container */
+.modal-container {
+  position: relative;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: modalSlideIn 0.4s ease-out;
+}
+
+@keyframes modalSlideIn {
+  0% {
+    transform: translateY(-50px) scale(0.9);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Modal background effects */
+.modal-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 30% 20%, rgba(0, 255, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 70% 80%, rgba(128, 0, 255, 0.1) 0%, transparent 50%),
+    linear-gradient(135deg, rgba(15, 25, 40, 0.95) 0%, rgba(10, 15, 30, 0.95) 100%);
+  border-radius: 16px;
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    0 0 40px rgba(0, 255, 255, 0.2);
+  z-index: 1;
+}
+
+/* Modal neural network background */
+.modal-neural-network {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.modal-neural-node {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: var(--primary-cyan);
+  border-radius: 50%;
+  box-shadow: 0 0 15px var(--primary-cyan);
+  animation: modalNodePulse 3s ease-in-out infinite;
+}
+
+.modal-neural-node.node-1 {
+  top: 20%;
+  left: 15%;
+  animation-delay: 0s;
+}
+
+.modal-neural-node.node-2 {
+  top: 60%;
+  right: 20%;
+  animation-delay: 1s;
+}
+
+.modal-neural-node.node-3 {
+  bottom: 25%;
+  left: 25%;
+  animation-delay: 2s;
+}
+
+@keyframes modalNodePulse {
+  0%, 100% { 
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 1;
+    transform: scale(1.5);
+  }
+}
+
+.modal-neural-connection {
+  position: absolute;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--primary-cyan), transparent);
+  opacity: 0.4;
+  animation: modalConnectionFlow 4s linear infinite;
+}
+
+.modal-neural-connection.connection-1 {
+  top: 25%;
+  left: 20%;
+  width: 60%;
+  transform: rotate(15deg);
+}
+
+.modal-neural-connection.connection-2 {
+  bottom: 30%;
+  right: 15%;
+  width: 50%;
+  transform: rotate(-20deg);
+  animation-delay: 2s;
+}
+
+@keyframes modalConnectionFlow {
+  0% { opacity: 0; }
+  50% { opacity: 0.6; }
+  100% { opacity: 0; }
+}
+
+/* Modal content */
+.modal-content {
+  position: relative;
+  z-index: 10;
+  padding: 2rem;
+  border-radius: 16px;
+}
+
+/* Modal header */
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+.modal-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  position: relative;
+}
+
+.modal-icon {
+  font-size: 1.5rem;
+  filter: drop-shadow(0 0 10px var(--primary-cyan));
+  animation: modalIconSpark 2s ease-in-out infinite;
+}
+
+@keyframes modalIconSpark {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+.modal-title h2 {
+  font-family: 'Orbitron', monospace;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+  margin: 0;
+}
+
+.title-glow {
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--primary-cyan), transparent);
+  animation: titleGlowPulse 2s ease-in-out infinite;
+}
+
+@keyframes titleGlowPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.modal-close-btn {
+  background: none;
+  border: 1px solid var(--text-secondary);
+  color: var(--text-secondary);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+}
+
+.modal-close-btn:hover {
+  border-color: var(--accent-pink);
+  color: var(--accent-pink);
+  box-shadow: 0 0 15px rgba(255, 0, 128, 0.3);
+  transform: rotate(90deg);
+}
+
+.modal-close-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Modal form */
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'Orbitron', monospace;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.label-icon {
+  font-size: 1rem;
+  filter: drop-shadow(0 0 8px var(--primary-cyan));
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+.neural-input,
+.neural-textarea {
+  width: 100%;
+  background: rgba(15, 25, 40, 0.8);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 1rem;
+  font-family: 'Rajdhani', monospace;
+  font-size: 1rem;
+  color: var(--text-primary);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  resize: vertical;
+}
+
+.neural-input::placeholder,
+.neural-textarea::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.neural-input:focus,
+.neural-textarea:focus {
+  outline: none;
+  border-color: var(--primary-cyan);
+  box-shadow: 
+    0 0 20px rgba(0, 255, 255, 0.3),
+    inset 0 0 20px rgba(0, 255, 255, 0.1);
+}
+
+.neural-input.error,
+.neural-textarea.error {
+  border-color: var(--accent-pink);
+  box-shadow: 0 0 15px rgba(255, 0, 128, 0.3);
+}
+
+.input-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  background: linear-gradient(45deg, transparent, rgba(0, 255, 255, 0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.neural-input:focus + .input-glow,
+.neural-textarea:focus + .input-glow {
+  opacity: 1;
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--accent-pink);
+  font-weight: 500;
+}
+
+.error-icon {
+  font-size: 0.9rem;
+  filter: drop-shadow(0 0 5px var(--accent-pink));
+}
+
+/* Form actions */
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  justify-content: flex-end;
+}
+
+.execute-btn {
+  background: linear-gradient(135deg, var(--primary-cyan), var(--primary-blue));
+  border: 1px solid var(--primary-cyan);
+  color: var(--text-primary);
+  font-family: 'Orbitron', monospace;
+  font-weight: 600;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  min-width: 160px;
+  justify-content: center;
+}
+
+.execute-btn:hover {
+  box-shadow: 
+    0 0 30px rgba(0, 255, 255, 0.5),
+    0 5px 20px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+.execute-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.execute-btn.loading {
+  background: linear-gradient(135deg, var(--accent-orange), var(--primary-cyan));
+  animation: executeLoading 1.5s ease-in-out infinite;
+}
+
+@keyframes executeLoading {
+  0%, 100% { 
+    box-shadow: 0 0 20px rgba(255, 128, 0, 0.4);
+  }
+  50% { 
+    box-shadow: 0 0 40px rgba(255, 128, 0, 0.6);
+  }
+}
+
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid var(--text-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.btn-icon {
+  font-size: 1rem;
+  filter: drop-shadow(0 0 8px var(--text-primary));
+}
+
+.execute-btn .btn-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.execute-btn:hover .btn-particles {
+  opacity: 1;
+}
+
+.execute-btn .btn-particles::before,
+.execute-btn .btn-particles::after {
+  content: '';
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--text-primary);
+  border-radius: 50%;
+  animation: modalParticleMove 2s linear infinite;
+}
+
+.execute-btn .btn-particles::before {
+  top: 20%;
+  left: 20%;
+  animation-delay: 0s;
+}
+
+.execute-btn .btn-particles::after {
+  bottom: 20%;
+  right: 20%;
+  animation-delay: 1s;
+}
+
+@keyframes modalParticleMove {
+  0% { 
+    opacity: 0;
+    transform: scale(0);
+  }
+  50% { 
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% { 
+    opacity: 0;
+    transform: scale(0) translate(20px, -20px);
+  }
+}
+
+/* Modal data stream effects */
+.modal-data-stream {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.modal-data-stream .stream-particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: var(--primary-cyan);
+  border-radius: 50%;
+  opacity: 0;
+  animation: modalStreamFlow 4s linear infinite;
+}
+
+.modal-data-stream .stream-1 {
+  top: 30%;
+  left: 10%;
+  animation-delay: 0s;
+}
+
+.modal-data-stream .stream-2 {
+  top: 60%;
+  right: 15%;
+  animation-delay: 1.5s;
+}
+
+.modal-data-stream .stream-3 {
+  bottom: 40%;
+  left: 30%;
+  animation-delay: 3s;
+}
+
+@keyframes modalStreamFlow {
+  0% { 
+    opacity: 0;
+    transform: translateY(0);
+  }
+  10% { 
+    opacity: 1;
+  }
+  90% { 
+    opacity: 1;
+  }
+  100% { 
+    opacity: 0;
+    transform: translateY(-100px);
+  }
+}
+
+/* Responsive modal styles */
+@media (max-width: 768px) {
+  .modal-container {
+    width: 95%;
+    max-height: 95vh;
+  }
+  
+  .modal-content {
+    padding: 1.5rem;
+  }
+  
+  .modal-title h2 {
+    font-size: 1.2rem;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .execute-btn {
+    width: 100%;
+    padding: 1rem;
+  }
+  
+  .cancel-btn {
+    width: 100%;
+    padding: 1rem;
   }
 } 

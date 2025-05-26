@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import InitializeDIDModal from '../components/InitializeDIDModal'
+import { okxWallet, formatBitcoinAddress } from '../utils/wallet'
 
 const MyDIDs = () => {
   const navigate = useNavigate()
@@ -8,6 +10,10 @@ const MyDIDs = () => {
   const [isLoaded, setIsLoaded] = useState(false)
   const [selectedDID, setSelectedDID] = useState(null)
   const [showUpdateMessage, setShowUpdateMessage] = useState(false)
+  const [showInitializeModal, setShowInitializeModal] = useState(false)
+  const [walletConnected, setWalletConnected] = useState(false)
+  const [walletAccount, setWalletAccount] = useState(null)
+  const [walletLoading, setWalletLoading] = useState(false)
 
   // DID数据状态
   const [dids, setDids] = useState([
@@ -75,12 +81,30 @@ const MyDIDs = () => {
       // 清除location state
       window.history.replaceState({}, document.title)
     }
+
+    // 检查钱包连接状态
+    if (okxWallet.isConnected) {
+      setWalletConnected(true)
+      setWalletAccount(okxWallet.account)
+    }
+
+    // 监听钱包账户变化
+    okxWallet.onAccountsChanged((accounts) => {
+      if (accounts.length === 0) {
+        setWalletConnected(false)
+        setWalletAccount(null)
+      } else {
+        setWalletAccount(accounts[0])
+      }
+    })
   }, [location.state])
 
-  const filteredDIDs = dids.filter(did => 
-    did.alias.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    did.did.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredDIDs = dids
+    .filter(did => 
+      did.alias.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      did.did.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate))
 
   const handleManageDID = (didId, alias) => {
     navigate(`/detail/${didId}`, { state: { alias } })
@@ -109,6 +133,81 @@ const MyDIDs = () => {
   const getTypeIcon = (type) => {
     // 所有DID卡片都使用BitCoin DID的logo
     return '₿'
+  }
+
+  const handleInitializeDID = () => {
+    if (!walletConnected) {
+      alert('Please connect your OKX Wallet first to initialize a new DID')
+      return
+    }
+    setShowInitializeModal(true)
+  }
+
+  const handleCloseModal = () => {
+    setShowInitializeModal(false)
+  }
+
+  const handleSubmitDID = (formData) => {
+    // 生成新的DID ID
+    const newId = (dids.length + 1).toString()
+    
+    // 创建新的DID对象
+    const newDID = {
+      id: newId,
+      alias: formData.alias,
+      did: 'did:btc:pending...sync',
+      fullDid: 'did:btc:pending-blockchain-synchronization',
+      createdDate: new Date().toISOString().split('T')[0],
+      status: 'syncing',
+      type: 'experimental',
+      security: 'quantum-resistant',
+      network: 'mainnet',
+      remainingBlocks: 5,
+      progress: 0
+    }
+    
+    // 添加到DID列表
+    setDids(prevDids => [newDID, ...prevDids])
+    
+    // 显示成功消息
+    setShowUpdateMessage(true)
+    setTimeout(() => setShowUpdateMessage(false), 3000)
+  }
+
+  const handleConnectWallet = async () => {
+    setWalletLoading(true)
+    
+    try {
+      const result = await okxWallet.connectWallet()
+      
+      if (result.success) {
+        setWalletConnected(true)
+        setWalletAccount(result.account)
+      } else {
+        // 显示错误消息
+        console.error('Wallet connection failed:', result.error)
+        
+        // 根据错误类型显示不同的消息
+        if (result.error.includes('not installed')) {
+          alert('OKX Wallet is not installed. Please install it from https://www.okx.com/web3')
+        } else if (result.error.includes('rejected')) {
+          alert('Connection was rejected. Please try again and approve the connection.')
+        } else {
+          alert(`Failed to connect wallet: ${result.error}`)
+        }
+      }
+    } catch (error) {
+      console.error('Wallet connection error:', error)
+      alert('Failed to connect wallet. Please make sure OKX Wallet is installed.')
+    } finally {
+      setWalletLoading(false)
+    }
+  }
+
+  const handleDisconnectWallet = () => {
+    okxWallet.disconnect()
+    setWalletConnected(false)
+    setWalletAccount(null)
   }
 
   return (
@@ -146,21 +245,41 @@ const MyDIDs = () => {
           </div>
           <div className="header-stats">
             <div className="stat-item">
-              <div className="stat-value">{dids.length}</div>
+              <div className="stat-value">
+                {walletConnected ? dids.filter(did => did.status === 'active').length : 0}
+              </div>
               <div className="stat-label">Active DIDs</div>
             </div>
           </div>
         </div>
-        <button className="connect-wallet-btn">
-          <span className="btn-text">CONNECT WALLET</span>
-          <div className="btn-glow"></div>
-        </button>
+        {walletConnected ? (
+          <div className="wallet-connected">
+            <div className="wallet-info">
+              <span className="wallet-label">Bitcoin Mainnet</span>
+              <span className="wallet-address">{formatBitcoinAddress(walletAccount)}</span>
+            </div>
+            <button className="disconnect-wallet-btn" onClick={handleDisconnectWallet}>
+              <span className="btn-text">DISCONNECT</span>
+            </button>
+          </div>
+        ) : (
+          <button 
+            className="connect-wallet-btn" 
+            onClick={handleConnectWallet}
+            disabled={walletLoading}
+          >
+            <span className="btn-text">
+              {walletLoading ? 'CONNECTING...' : 'CONNECT WALLET'}
+            </span>
+            <div className="btn-glow"></div>
+          </button>
+        )}
       </header>
 
       <div className="page-content sci-fi-content">
         {/* Control Panel */}
         <div className={`control-panel ${isLoaded ? 'loaded' : ''}`}>
-          <button className="register-btn">
+          <button className="register-btn" onClick={handleInitializeDID}>
             <span className="btn-icon">⚡</span>
             <span className="btn-text">INITIALIZE NEW DID</span>
             <div className="btn-particles"></div>
@@ -183,7 +302,20 @@ const MyDIDs = () => {
 
         {/* DID Grid */}
         <div className={`did-grid ${isLoaded ? 'loaded' : ''}`}>
-          {filteredDIDs.map((did, index) => (
+          {!walletConnected ? (
+            <div className="empty-state">
+              <div className="empty-icon">🔗</div>
+              <h3>NO WALLET CONNECTED</h3>
+              <p>Please connect your Wallet to view your DIDs</p>
+            </div>
+          ) : filteredDIDs.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">🔍</div>
+              <h3>NO NEURAL PATTERNS DETECTED</h3>
+              <p>Adjust your search parameters or initialize a new DID</p>
+            </div>
+          ) : (
+            filteredDIDs.map((did, index) => (
             <div
               key={did.id}
               className={`did-card ${did.status} ${selectedDID === did.id ? 'selected' : ''}`}
@@ -291,18 +423,17 @@ const MyDIDs = () => {
                 <div className="stream-particle stream-3"></div>
               </div>
             </div>
-          ))}
+          ))
+          )}
         </div>
-
-        {/* Empty State */}
-        {filteredDIDs.length === 0 && (
-          <div className="empty-state">
-            <div className="empty-icon">🔍</div>
-            <h3>NO NEURAL PATTERNS DETECTED</h3>
-            <p>Adjust your search parameters or initialize a new DID</p>
-          </div>
-        )}
       </div>
+
+      {/* Initialize DID Modal */}
+      <InitializeDIDModal
+        isOpen={showInitializeModal}
+        onClose={handleCloseModal}
+        onSubmit={handleSubmitDID}
+      />
     </div>
   )
 }
