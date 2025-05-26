@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import InitializeDIDModal from '../components/InitializeDIDModal'
-import { okxWallet, formatBitcoinAddress } from '../utils/wallet'
+import WalletConnectModal from '../components/WalletConnectModal'
+import { walletManager, formatBitcoinAddress } from '../utils/wallet'
 
 const MyDIDs = () => {
   const navigate = useNavigate()
@@ -11,9 +12,10 @@ const MyDIDs = () => {
   const [selectedDID, setSelectedDID] = useState(null)
   const [showUpdateMessage, setShowUpdateMessage] = useState(false)
   const [showInitializeModal, setShowInitializeModal] = useState(false)
+  const [showWalletModal, setShowWalletModal] = useState(false)
   const [walletConnected, setWalletConnected] = useState(false)
   const [walletAccount, setWalletAccount] = useState(null)
-  const [walletLoading, setWalletLoading] = useState(false)
+  const [walletType, setWalletType] = useState(null)
 
   // DID数据状态
   const [dids, setDids] = useState([
@@ -47,7 +49,7 @@ const MyDIDs = () => {
       did: 'did:btc:pending...sync',
       fullDid: 'did:btc:pending-blockchain-synchronization',
       createdDate: '2024-12-20',
-      status: 'syncing',
+      status: 'pending',
       type: 'experimental',
       security: 'quantum-resistant',
       network: 'mainnet',
@@ -83,16 +85,18 @@ const MyDIDs = () => {
     }
 
     // 检查钱包连接状态
-    if (okxWallet.isConnected) {
+    if (walletManager.isConnected) {
       setWalletConnected(true)
-      setWalletAccount(okxWallet.account)
+      setWalletAccount(walletManager.account)
+      setWalletType(walletManager.walletType)
     }
 
     // 监听钱包账户变化
-    okxWallet.onAccountsChanged((accounts) => {
+    walletManager.onAccountsChanged((accounts) => {
       if (accounts.length === 0) {
         setWalletConnected(false)
         setWalletAccount(null)
+        setWalletType(null)
       } else {
         setWalletAccount(accounts[0])
       }
@@ -116,8 +120,8 @@ const MyDIDs = () => {
   }
 
   const getStatusDisplay = (did) => {
-    if (did.status === 'syncing') {
-      return `Syncing (${did.remainingBlocks} blocks remaining)`
+    if (did.status === 'pending') {
+      return `Pending (${did.remainingBlocks} blocks remaining)`
     }
     return 'Active'
   }
@@ -125,7 +129,7 @@ const MyDIDs = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'active': return 'var(--primary-cyan)'
-      case 'syncing': return 'var(--accent-orange)'
+      case 'pending': return 'var(--accent-orange)'
       default: return 'var(--text-secondary)'
     }
   }
@@ -137,7 +141,7 @@ const MyDIDs = () => {
 
   const handleInitializeDID = () => {
     if (!walletConnected) {
-      alert('Please connect your OKX Wallet first to initialize a new DID')
+      alert('Please connect your wallet first to initialize a new DID')
       return
     }
     setShowInitializeModal(true)
@@ -158,7 +162,7 @@ const MyDIDs = () => {
       did: 'did:btc:pending...sync',
       fullDid: 'did:btc:pending-blockchain-synchronization',
       createdDate: new Date().toISOString().split('T')[0],
-      status: 'syncing',
+      status: 'pending',
       type: 'experimental',
       security: 'quantum-resistant',
       network: 'mainnet',
@@ -174,40 +178,45 @@ const MyDIDs = () => {
     setTimeout(() => setShowUpdateMessage(false), 3000)
   }
 
-  const handleConnectWallet = async () => {
-    setWalletLoading(true)
-    
+  const handleConnectWallet = () => {
+    setShowWalletModal(true)
+  }
+
+  const handleWalletConnect = async (walletType) => {
     try {
-      const result = await okxWallet.connectWallet()
+      const result = await walletManager.connectWallet(walletType)
       
       if (result.success) {
         setWalletConnected(true)
         setWalletAccount(result.account)
+        setWalletType(walletType)
       } else {
         // 显示错误消息
         console.error('Wallet connection failed:', result.error)
         
         // 根据错误类型显示不同的消息
         if (result.error.includes('not installed')) {
-          alert('OKX Wallet is not installed. Please install it from https://www.okx.com/web3')
+          const walletName = walletType === 'okx' ? 'OKX Wallet' : 'Unisat Wallet'
+          const downloadUrl = walletType === 'okx' ? 'https://www.okx.com/web3' : 'https://unisat.io'
+          alert(`${walletName} is not installed. Please install it from ${downloadUrl}`)
         } else if (result.error.includes('rejected')) {
           alert('Connection was rejected. Please try again and approve the connection.')
         } else {
           alert(`Failed to connect wallet: ${result.error}`)
         }
+        throw new Error(result.error)
       }
     } catch (error) {
       console.error('Wallet connection error:', error)
-      alert('Failed to connect wallet. Please make sure OKX Wallet is installed.')
-    } finally {
-      setWalletLoading(false)
+      throw error
     }
   }
 
   const handleDisconnectWallet = () => {
-    okxWallet.disconnect()
+    walletManager.disconnect()
     setWalletConnected(false)
     setWalletAccount(null)
+    setWalletType(null)
   }
 
   return (
@@ -255,7 +264,9 @@ const MyDIDs = () => {
         {walletConnected ? (
           <div className="wallet-connected">
             <div className="wallet-info">
-              <span className="wallet-label">Bitcoin Mainnet</span>
+              <span className="wallet-label">
+                {walletType === 'okx' ? 'OKX Wallet' : 'Unisat Wallet'} - Bitcoin Mainnet
+              </span>
               <span className="wallet-address">{formatBitcoinAddress(walletAccount)}</span>
             </div>
             <button className="disconnect-wallet-btn" onClick={handleDisconnectWallet}>
@@ -266,11 +277,8 @@ const MyDIDs = () => {
           <button 
             className="connect-wallet-btn" 
             onClick={handleConnectWallet}
-            disabled={walletLoading}
           >
-            <span className="btn-text">
-              {walletLoading ? 'CONNECTING...' : 'CONNECT WALLET'}
-            </span>
+            <span className="btn-text">CONNECT WALLET</span>
             <div className="btn-glow"></div>
           </button>
         )}
@@ -364,11 +372,11 @@ const MyDIDs = () => {
                 </div>
               </div>
 
-              {/* Progress Bar for Syncing */}
-              {did.status === 'syncing' && (
+              {/* Progress Bar for Pending */}
+              {did.status === 'pending' && (
                 <div className="sync-progress">
                   <div className="progress-label">
-                    <span>BLOCKCHAIN SYNC</span>
+                    <span>BLOCKCHAIN PENDING</span>
                     <span>{did.remainingBlocks} blocks left</span>
                   </div>
                   <div className="progress-bar">
@@ -428,11 +436,18 @@ const MyDIDs = () => {
         </div>
       </div>
 
-      {/* Initialize DID Modal */}
-      <InitializeDIDModal
+            {/* Initialize DID Modal */}
+      <InitializeDIDModal 
         isOpen={showInitializeModal}
         onClose={handleCloseModal}
         onSubmit={handleSubmitDID}
+      />
+
+      {/* Wallet Connect Modal */}
+      <WalletConnectModal 
+        isOpen={showWalletModal}
+        onClose={() => setShowWalletModal(false)}
+        onConnect={handleWalletConnect}
       />
     </div>
   )
