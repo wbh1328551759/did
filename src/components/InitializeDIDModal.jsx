@@ -25,17 +25,13 @@ const InitializeDIDModal = ({ isOpen, onClose, onSubmit }) => {
   const validateForm = () => {
     const newErrors = {}
     
+    // Alias是必填字段，任意字符任意长度
     if (!formData.alias.trim()) {
       newErrors.alias = 'Please enter an alias'
-    } else if (formData.alias.length < 3) {
-      newErrors.alias = 'Alias must be at least 3 characters'
     }
     
-    if (!formData.publicKey.trim()) {
-      newErrors.publicKey = 'Please enter binding public key'
-    } else if (formData.publicKey.length < 64) {
-      newErrors.publicKey = 'Invalid public key format'
-    }
+    // Public Key不是必填字段，移除验证
+    // 用户可以选择填写或不填写
     
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -117,7 +113,7 @@ const InitializeDIDModal = ({ isOpen, onClose, onSubmit }) => {
             {/* Alias */}
             <div className="form-group">
               <label className="form-label">
-                Alias
+                Alias <span className="required-indicator">*</span>
               </label>
               <div className="input-wrapper">
                 <input
@@ -131,7 +127,7 @@ const InitializeDIDModal = ({ isOpen, onClose, onSubmit }) => {
                 <div className="input-glow"></div>
               </div>
               {errors.alias && (
-                <div className="error-message">
+                <div className="form-error-message">
                   <span className="error-icon">⚠️</span>
                   {errors.alias}
                 </div>
@@ -141,25 +137,19 @@ const InitializeDIDModal = ({ isOpen, onClose, onSubmit }) => {
             {/* Binding (Public Key) */}
             <div className="form-group">
               <label className="form-label">
-                Binding (Public Key)
+                Binding (Public Key) <span className="optional-indicator">(Optional)</span>
               </label>
               <div className="input-wrapper">
                 <textarea
                   value={formData.publicKey}
                   onChange={(e) => handleInputChange('publicKey', e.target.value)}
-                  placeholder="Enter public key data..."
-                  className={`neural-textarea ${errors.publicKey ? 'error' : ''}`}
+                  placeholder="Enter public key data (optional)..."
+                  className="neural-textarea"
                   rows="4"
                   disabled={isLoading}
                 />
                 <div className="input-glow"></div>
               </div>
-              {errors.publicKey && (
-                <div className="error-message">
-                  <span className="error-icon">⚠️</span>
-                  {errors.publicKey}
-                </div>
-              )}
             </div>
 
             {/* Action Buttons */}

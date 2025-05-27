@@ -6,6 +6,7 @@
   --primary-purple: #8000ff;
   --accent-pink: #ff0080;
   --accent-orange: #ff8000;
+  --error-red: #ff4444;
   --dark-bg: #0a0a0f;
   --darker-bg: #050508;
   --card-bg: rgba(15, 25, 40, 0.8);
@@ -1427,6 +1428,26 @@ body::after {
     0 0 30px rgba(255, 128, 0, 0.3);
 }
 
+.did-card.failed {
+  border-color: var(--error-red);
+}
+
+.did-card.failed:hover {
+  box-shadow: 
+    0 15px 40px rgba(0, 0, 0, 0.4),
+    0 0 30px rgba(255, 68, 68, 0.3);
+}
+
+.did-card.active-update-failed {
+  border-color: var(--error-red);
+}
+
+.did-card.active-update-failed:hover {
+  box-shadow: 
+    0 15px 40px rgba(0, 0, 0, 0.4),
+    0 0 30px rgba(255, 68, 68, 0.3);
+}
+
 /* Card Header */
 .card-header {
   display: flex;
@@ -1622,6 +1643,11 @@ body::after {
   color: var(--text-primary);
 }
 
+.info-value.pending-tx {
+  color: var(--accent-orange);
+  text-shadow: 0 0 8px rgba(255, 128, 0, 0.5);
+}
+
 .manage-btn {
   background: linear-gradient(135deg, var(--primary-cyan), var(--primary-blue));
   border: none;
@@ -1653,6 +1679,117 @@ body::after {
 .manage-btn:hover .btn-arrow {
   transform: translateX(3px);
 }
+
+/* Error Message for Failed DIDs */
+.error-message {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: rgba(255, 68, 68, 0.1);
+  border: 1px solid var(--error-red);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+}
+
+.error-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--error-red);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.25rem;
+  text-align: left;
+}
+
+.error-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.error-label span:first-child {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--error-red);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.error-label span:last-child {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+.error-description {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  text-align: left;
+}
+
+/* Delete Button for Failed DIDs */
+.delete-btn {
+  background: linear-gradient(135deg, var(--error-red), #cc3333);
+  border: none;
+  color: var(--text-primary);
+  font-family: 'Orbitron', monospace;
+  font-weight: 600;
+  font-size: 0.8rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 0 15px rgba(255, 68, 68, 0.3);
+}
+
+.delete-btn:hover {
+  box-shadow: 0 0 25px rgba(255, 68, 68, 0.5);
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #ff6666, var(--error-red));
+}
+
+
+
+
+
+/* Dismiss Button for Update Failed DIDs */
+.dismiss-btn {
+  background: linear-gradient(135deg, var(--error-red), #ff6666);
+  border: none;
+  color: var(--text-primary);
+  font-family: 'Orbitron', monospace;
+  font-weight: 600;
+  font-size: 0.8rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 0 15px rgba(255, 68, 68, 0.3);
+}
+
+.dismiss-btn:hover {
+  box-shadow: 0 0 25px rgba(255, 68, 68, 0.5);
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #ff6666, var(--error-red));
+}
+
+
 
 /* Card Effects */
 .card-glow {
@@ -3131,6 +3268,19 @@ body::after {
   filter: drop-shadow(0 0 8px var(--primary-cyan));
 }
 
+.required-indicator {
+  color: var(--error-red);
+  font-weight: 700;
+  margin-left: 0.25rem;
+}
+
+.optional-indicator {
+  color: var(--text-secondary);
+  font-weight: 400;
+  font-size: 0.8rem;
+  margin-left: 0.25rem;
+}
+
 .input-wrapper {
   position: relative;
 }
@@ -3189,7 +3339,7 @@ body::after {
   opacity: 1;
 }
 
-.error-message {
+.form-error-message {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -3779,5 +3929,285 @@ body::after {
   
   .wallet-option-description {
     font-size: 0.8rem;
+  }
+}
+
+/* ===== CONFIRM DIALOG STYLES ===== */
+
+/* Confirm dialog overlay */
+.confirm-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  animation: confirmFadeIn 0.3s ease-out;
+}
+
+@keyframes confirmFadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* Confirm dialog container */
+.confirm-dialog-container {
+  position: relative;
+  width: 90%;
+  max-width: 480px;
+  animation: confirmSlideIn 0.4s ease-out;
+}
+
+@keyframes confirmSlideIn {
+  0% {
+    transform: translateY(-50px) scale(0.9);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Confirm dialog background */
+.confirm-dialog-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 30% 20%, rgba(0, 255, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 70% 80%, rgba(255, 68, 68, 0.1) 0%, transparent 50%),
+    linear-gradient(135deg, rgba(15, 25, 40, 0.95) 0%, rgba(10, 15, 30, 0.95) 100%);
+  border-radius: 16px;
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    0 0 40px rgba(0, 255, 255, 0.2);
+  z-index: 1;
+}
+
+/* Confirm neural network background */
+.confirm-neural-network {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.confirm-neural-node {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: var(--primary-cyan);
+  border-radius: 50%;
+  box-shadow: 0 0 12px var(--primary-cyan);
+  animation: confirmNodePulse 3s ease-in-out infinite;
+}
+
+.confirm-neural-node.node-1 {
+  top: 25%;
+  left: 20%;
+  animation-delay: 0s;
+}
+
+.confirm-neural-node.node-2 {
+  bottom: 30%;
+  right: 25%;
+  animation-delay: 1.5s;
+}
+
+@keyframes confirmNodePulse {
+  0%, 100% { 
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 1;
+    transform: scale(1.5);
+  }
+}
+
+.confirm-neural-connection {
+  position: absolute;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--primary-cyan), transparent);
+  opacity: 0.4;
+  animation: confirmConnectionFlow 4s linear infinite;
+}
+
+.confirm-neural-connection.connection-1 {
+  top: 30%;
+  left: 25%;
+  width: 50%;
+  transform: rotate(20deg);
+}
+
+@keyframes confirmConnectionFlow {
+  0% { opacity: 0; }
+  50% { opacity: 0.6; }
+  100% { opacity: 0; }
+}
+
+/* Confirm dialog content */
+.confirm-dialog-content {
+  position: relative;
+  z-index: 10;
+  padding: 2rem;
+  border-radius: 16px;
+}
+
+/* Confirm dialog header */
+.confirm-dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+.confirm-dialog-icon {
+  font-size: 2rem;
+  filter: drop-shadow(0 0 10px currentColor);
+  animation: confirmIconPulse 2s ease-in-out infinite;
+}
+
+@keyframes confirmIconPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.confirm-dialog-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+/* Confirm dialog message */
+.confirm-dialog-message {
+  margin-bottom: 2rem;
+}
+
+.confirm-dialog-message p {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Confirm dialog actions */
+.confirm-dialog-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.confirm-cancel-btn {
+  background: rgba(15, 25, 40, 0.8);
+  border: 1px solid var(--text-secondary);
+  color: var(--text-secondary);
+  font-family: 'Orbitron', monospace;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.confirm-cancel-btn:hover {
+  border-color: var(--primary-cyan);
+  color: var(--primary-cyan);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.confirm-confirm-btn {
+  font-family: 'Orbitron', monospace;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  color: var(--text-primary);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.confirm-btn-danger {
+  background: linear-gradient(135deg, var(--error-red), #cc3333);
+  box-shadow: 0 0 20px rgba(255, 68, 68, 0.3);
+}
+
+.confirm-btn-danger:hover {
+  box-shadow: 0 0 30px rgba(255, 68, 68, 0.5);
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #ff6666, var(--error-red));
+}
+
+.confirm-btn-warning {
+  background: linear-gradient(135deg, var(--accent-orange), #ff9933);
+  box-shadow: 0 0 20px rgba(255, 128, 0, 0.3);
+}
+
+.confirm-btn-warning:hover {
+  box-shadow: 0 0 30px rgba(255, 128, 0, 0.5);
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #ffaa44, var(--accent-orange));
+}
+
+.confirm-btn-primary {
+  background: linear-gradient(135deg, var(--primary-cyan), var(--primary-blue));
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+}
+
+.confirm-btn-primary:hover {
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+/* Responsive confirm dialog styles */
+@media (max-width: 768px) {
+  .confirm-dialog-container {
+    width: 95%;
+    max-width: none;
+  }
+  
+  .confirm-dialog-content {
+    padding: 1.5rem;
+  }
+  
+  .confirm-dialog-title {
+    font-size: 1.1rem;
+  }
+  
+  .confirm-dialog-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .confirm-cancel-btn,
+  .confirm-confirm-btn {
+    width: 100%;
+    padding: 1rem;
   }
 } 

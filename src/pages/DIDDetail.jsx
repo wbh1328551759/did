@@ -1,5 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
+import DetailHeader from '../components/DetailHeader'
+import DetailBackgroundEffects from '../components/DetailBackgroundEffects'
+import SaveNotification from '../components/SaveNotification'
+import IdentityCore from '../components/IdentityCore'
+import NeuralBindings from '../components/NeuralBindings'
+import DIDDocumentViewer from '../components/DIDDocumentViewer'
+import ActionPanel from '../components/ActionPanel'
 
 const DIDDetail = () => {
   const navigate = useNavigate()
@@ -135,193 +142,52 @@ const DIDDetail = () => {
   return (
     <div className="page sci-fi-detail-page">
       {/* Success notification */}
-      {saveSuccess && (
-        <div className="save-notification">
-          <div className="notification-content">
-            <span className="notification-icon">✅</span>
-            <span className="notification-text">DID has been updated successfully</span>
-          </div>
-        </div>
-      )}
+      <SaveNotification show={saveSuccess} />
 
       {/* Holographic background */}
-      <div className="holographic-background">
-        <div className="holo-grid"></div>
-        <div className="data-particles">
-          <div className="particle particle-1"></div>
-          <div className="particle particle-2"></div>
-          <div className="particle particle-3"></div>
-          <div className="particle particle-4"></div>
-          <div className="particle particle-5"></div>
-        </div>
-      </div>
+      <DetailBackgroundEffects />
 
       {/* Header */}
-      <header className={`detail-header ${isLoaded ? 'loaded' : ''}`}>
-        <button
-          onClick={handleBack}
-          className="back-btn"
-        >
-          <span className="btn-icon">←</span>
-          <span className="btn-text">BitCoin DID</span>
-          <div className="btn-glow"></div>
-        </button>
-        
-        <div className="header-center">
-          <div className="identity-badge">
-            <div className="badge-icon">₿</div>
-            <div className="badge-info">
-              <h1 className="identity-title">{alias}</h1>
-              <div className="identity-status">
-                <div className="status-dot active"></div>
-                <span>ACTIVE</span>
-                {hasUnsavedChanges && !isEditing && (
-                  <span className="unsaved-indicator">• 未保存</span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="header-actions">
-          <button 
-            className={`action-btn primary-action ${isEditing ? 'active' : ''} ${isSaving ? 'saving' : ''}`}
-            onClick={handleEditToggle}
-            disabled={isSaving}
-          >
-            <span className="btn-text">
-              {isSaving ? 'SAVING...' : isEditing ? 'SAVE' : 'EDIT DID'}
-            </span>
-            <div className="btn-particles"></div>
-          </button>
-          {isEditing && (
-            <button 
-              className="cancel-btn"
-              onClick={handleCancelEdit}
-              disabled={isSaving}
-            >
-              <span className="btn-icon">✕</span>
-              <span className="btn-text">CANCEL</span>
-            </button>
-          )}
-        </div>
-      </header>
+      <DetailHeader 
+        isLoaded={isLoaded}
+        alias={alias}
+        hasUnsavedChanges={hasUnsavedChanges}
+        isEditing={isEditing}
+        isSaving={isSaving}
+        onBack={handleBack}
+        onEditToggle={handleEditToggle}
+        onCancelEdit={handleCancelEdit}
+      />
 
       <div className="detail-content">
-
-
         {/* Content */}
         <div className={`tab-content ${isLoaded ? 'loaded' : ''}`}>
           {/* Identity Core */}
-          <div className="info-panel primary-panel" style={{ marginBottom: '2rem' }}>
-            <div className="panel-header">
-              <h3 className="panel-title">IDENTITY CORE</h3>
-              <div className="panel-status">
-                <div className="status-indicator active"></div>
-              </div>
-            </div>
-            <div className="panel-content">
-              <div className="info-row">
-                <label className="info-label">ALIAS:</label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={alias}
-                    onChange={(e) => setAlias(e.target.value)}
-                    className="neural-input"
-                  />
-                ) : (
-                  <span className="info-value">{alias}</span>
-                )}
-              </div>
-              <div className="info-row">
-                <label className="info-label">FULL DID:</label>
-                <div className="address-display">
-                  <span className="address-text">{didDocument.id}</span>
-                  <button
-                    onClick={() => copyToClipboard(didDocument.id)}
-                    className="copy-btn-neural"
-                    title="Copy full DID"
-                  >
-                    📋
-                  </button>
-                </div>
-              </div>
-              <div className="info-row">
-                <label className="info-label">NETWORK:</label>
-                <span className="info-value network-badge">BITCOIN MAINNET</span>
-              </div>
-              <div className="info-row">
-                <label className="info-label">CREATED:</label>
-                <span className="info-value">2024-03-15 09:42:33 UTC</span>
-              </div>
-            </div>
-          </div>
+          <IdentityCore 
+            alias={alias}
+            didDocument={didDocument}
+            isEditing={isEditing}
+            onAliasChange={setAlias}
+            onCopyToClipboard={copyToClipboard}
+          />
 
           {/* Bindings */}
-          <div className="binding-panel" style={{ marginBottom: '2rem' }}>
-            <div className="panel-header">
-              <h3 className="panel-title">NEURAL BINDINGS</h3>
-              <div className="binding-status">
-                <span className="binding-count">1 ACTIVE</span>
-              </div>
-            </div>
-            <div className="panel-content">
-              {Object.entries(bindings).map(([key, value]) => (
-                <div key={key} className="binding-row">
-                  <label className="binding-label">{key.toUpperCase()}:</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={value}
-                      onChange={(e) => handleBindingChange(key, e.target.value)}
-                      className="neural-input binding-input"
-                      placeholder={`Enter ${key}...`}
-                    />
-                  ) : (
-                    <div className="binding-display">
-                      <span className="binding-value">{value}</span>
-                      <button
-                        onClick={() => copyToClipboard(value)}
-                        className="copy-btn-neural"
-                        title={`Copy ${key}`}
-                      >
-                        📋
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+          <NeuralBindings 
+            bindings={bindings}
+            isEditing={isEditing}
+            onBindingChange={handleBindingChange}
+            onCopyToClipboard={copyToClipboard}
+          />
 
           {/* Document */}
-          <div className="document-panel">
-            <div className="panel-header">
-              <h3 className="panel-title">DID DOCUMENT</h3>
-              <button
-                onClick={downloadDocument}
-                className="download-btn"
-              >
-                <span className="btn-icon">⬇️</span>
-                <span className="btn-text">DOWNLOAD</span>
-              </button>
-            </div>
-            <div className="document-viewer">
-              <pre className="document-code">
-                <code>{JSON.stringify(didDocument, null, 2)}</code>
-              </pre>
-            </div>
-          </div>
+          <DIDDocumentViewer 
+            didDocument={didDocument}
+            onDownload={downloadDocument}
+          />
         </div>
 
         {/* Action Panel */}
-        <div className={`action-panel ${isLoaded ? 'loaded' : ''}`}>
-          <button className="action-btn danger-action">
-            <span className="btn-text">TERMINATE DID</span>
-            <div className="btn-particles"></div>
-          </button>
-        </div>
+        <ActionPanel isLoaded={isLoaded} />
       </div>
     </div>
   )
