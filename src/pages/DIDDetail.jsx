@@ -19,9 +19,10 @@ const DIDDetail = () => {
   const [isSaving, setIsSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
   
-  // Public Key binding
+  // Public Key bindings - 支持多个public key
   const [bindings, setBindings] = useState({
-    publicKey: '03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd'
+    publicKey1: '03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd',
+    publicKey2: '02b4632d08485ff1df2db55b9dafd23347d1c47a457072a1e87be26896549a8737'
   })
 
 
@@ -128,11 +129,27 @@ const DIDDetail = () => {
     linkElement.click()
   }
 
-  const handleBindingChange = (field, value) => {
-    setBindings(prev => ({
-      ...prev,
-      [field]: value
-    }))
+  const handleBindingChange = (action, data) => {
+    if (action === 'update') {
+      // 更新现有的public key
+      setBindings(prev => ({
+        ...prev,
+        [data.key]: data.value
+      }))
+    } else if (action === 'add') {
+      // 添加新的public key
+      setBindings(prev => ({
+        ...prev,
+        [data.key]: data.value
+      }))
+    } else if (action === 'remove') {
+      // 删除public key
+      setBindings(prev => {
+        const newBindings = { ...prev }
+        delete newBindings[data]
+        return newBindings
+      })
+    }
   }
 
 

@@ -17,7 +17,7 @@ const HeroSection = ({ isLoaded, onLaunchDID }) => {
         <span className="subtitle-text">
           Next-generation DID protocol powered by Bitcoin UTXO technology.
           <br />
-          Secure, decentralized, and truly yours.
+          {/* Secure, decentralized, and individual. */}
         </span>
       </p>
 

@@ -43,7 +43,8 @@ const MyDIDs = () => {
       status: 'active',
       type: 'primary',
       security: 'quantum-resistant',
-      network: 'mainnet'
+      network: 'mainnet',
+      controlAddress: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh'
     },
     {
       id: '2',
@@ -54,7 +55,8 @@ const MyDIDs = () => {
       status: 'active',
       type: 'corporate',
       security: 'multi-sig',
-      network: 'mainnet'
+      network: 'mainnet',
+      controlAddress: 'bc1p5d7rjq7g6rdk2yhzks9smlaqtedr4dekq08ge8gwqrkm4n2kdh8s'
     },
     {
       id: '3',
@@ -68,7 +70,8 @@ const MyDIDs = () => {
       network: 'mainnet',
       remainingBlocks: 3,
       progress: 67,
-      pendingTx: 'bc1q...a7f2'
+      pendingTx: 'bc1q...a7f2',
+      controlAddress: 'bc1qpendingaddressexamplefortest123456789'
     },
     {
       id: '4',
@@ -90,7 +93,8 @@ const MyDIDs = () => {
       status: 'active-update-failed',
       type: 'enterprise',
       security: 'multi-sig',
-      network: 'mainnet'
+      network: 'mainnet',
+      controlAddress: 'bc1p7d8rjq7g6rdk2yhzks9smlaqtedr4dekq08ge8gwqrkm4n2kdh8s'
     }
   ])
 

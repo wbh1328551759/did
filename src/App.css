@@ -2605,6 +2605,104 @@ body::after {
   max-width: 300px;
 }
 
+/* Binding management buttons */
+.add-binding-btn {
+  background: linear-gradient(135deg, var(--primary-cyan), var(--primary-blue));
+  border: none;
+  color: var(--text-primary);
+  font-size: 1rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-left: 0.5rem;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+}
+
+.add-binding-btn:hover {
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+  transform: scale(1.05);
+}
+
+.binding-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.remove-binding-btn {
+  background: linear-gradient(135deg, var(--error-red), #ff4444);
+  border: none;
+  color: var(--text-primary);
+  font-size: 1rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 10px rgba(255, 68, 68, 0.3);
+}
+
+.remove-binding-btn:hover {
+  box-shadow: 0 0 20px rgba(255, 68, 68, 0.5);
+  transform: scale(1.05);
+}
+
+.confirm-add-btn {
+  background: linear-gradient(135deg, #00ff88, #00cc66);
+  border: none;
+  color: var(--text-primary);
+  font-size: 1rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+}
+
+.confirm-add-btn:hover:not(:disabled) {
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+  transform: scale(1.05);
+}
+
+.confirm-add-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.cancel-add-btn {
+  background: linear-gradient(135deg, #666, #888);
+  border: none;
+  color: var(--text-primary);
+  font-size: 1rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 10px rgba(136, 136, 136, 0.3);
+}
+
+.cancel-add-btn:hover {
+  box-shadow: 0 0 20px rgba(136, 136, 136, 0.5);
+  transform: scale(1.05);
+}
+
+.add-form {
+  border-top: 1px solid rgba(0, 255, 255, 0.2);
+  padding-top: 1rem;
+  margin-top: 1rem;
+}
+
+.control-address {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.8rem;
+  color: var(--primary-cyan);
+  text-shadow: 0 0 8px rgba(0, 255, 255, 0.3);
+}
+
 /* Security grid */
 .security-grid {
   margin-bottom: 2rem;

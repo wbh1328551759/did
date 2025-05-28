@@ -7,7 +7,6 @@ const DIDDocumentViewer = ({ didDocument, onDownload }) => {
           onClick={onDownload}
           className="download-btn"
         >
-          <span className="btn-icon">⬇️</span>
           <span className="btn-text">DOWNLOAD</span>
         </button>
       </div>

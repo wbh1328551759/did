@@ -125,6 +125,28 @@ const DIDCard = ({
             <span className="info-label">NETWORK:</span>
             <span className="info-value">{did.network?.toUpperCase()}</span>
           </div>
+          {(did.status === 'active' || did.status === 'active-update-failed') && did.controlAddress && (
+            <div className="info-item">
+              <span className="info-label">CONTROL ADDRESS:</span>
+              <span className="info-value control-address">
+                {did.controlAddress.length > 16 
+                  ? `${did.controlAddress.slice(0, 8)}...${did.controlAddress.slice(-8)}`
+                  : did.controlAddress
+                }
+              </span>
+            </div>
+          )}
+          {did.status === 'pending' && did.controlAddress && (
+            <div className="info-item">
+              <span className="info-label">CONTROL ADDRESS:</span>
+              <span className="info-value control-address">
+                {did.controlAddress.length > 16 
+                  ? `${did.controlAddress.slice(0, 8)}...${did.controlAddress.slice(-8)}`
+                  : did.controlAddress
+                }
+              </span>
+            </div>
+          )}
           {did.status === 'pending' && did.pendingTx && (
             <div className="info-item">
               <span className="info-label">PENDING TX:</span>

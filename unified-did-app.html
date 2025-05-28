@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BitCoin DID - 去中心化身份</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-cyan': '#00ffff',
+                        'primary-blue': '#0080ff',
+                        'primary-purple': '#8000ff',
+                        'accent-pink': '#ff0080',
+                        'accent-orange': '#ff8000',
+                        'error-red': '#ff4444',
+                        'dark-bg': '#0a0a0f',
+                        'darker-bg': '#050508',
+                        'card-bg': 'rgba(15, 25, 40, 0.8)',
+                        'border-glow': 'rgba(0, 255, 255, 0.3)',
+                        'text-primary': '#ffffff',
+                        'text-secondary': '#a0a9c0',
+                        'text-accent': '#00ffff',
+                    },
+                    fontFamily: {
+                        'orbitron': ['Orbitron', 'monospace'],
+                        'rajdhani': ['Rajdhani', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-glow': 'pulse 2s ease-in-out infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        glow: {
+                            '0%': { boxShadow: '0 0 5px rgba(0, 255, 255, 0.5)' },
+                            '100%': { boxShadow: '0 0 20px rgba(0, 255, 255, 0.8)' },
+                        },
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: linear-gradient(135deg, #0a0a0f 0%, #050508 100%);
+            overflow-x: hidden;
+        }
+        
+        .sci-fi-bg {
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(0, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(128, 0, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(255, 0, 128, 0.05) 0%, transparent 50%),
+                linear-gradient(135deg, #0a0a0f 0%, #050508 100%);
+        }
+        
+        .neural-input {
+            background: rgba(15, 25, 40, 0.8);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            backdrop-filter: blur(12px);
+            transition: all 0.3s ease;
+        }
+        
+        .neural-input:focus {
+            outline: none;
+            border-color: #00ffff;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+        
+        .neural-btn {
+            background: linear-gradient(135deg, #00ffff, #0080ff);
+            color: #ffffff;
+            font-family: 'Orbitron', monospace;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+        }
+        
+        .neural-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.5);
+        }
+        
+        .neural-card {
+            background: rgba(15, 25, 40, 0.8);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            backdrop-filter: blur(12px);
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .neural-card:hover {
+            border-color: #00ffff;
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(0, 255, 255, 0.2);
+        }
+        
+        .grid-bg {
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: float 20s linear infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        @keyframes glow {
+            0% { box-shadow: 0 0 5px rgba(0, 255, 255, 0.5); }
+            100% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.8); }
+        }
+        
+        .animate-glow {
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        .hidden { display: none; }
+        .block { display: block; }
+        .flex { display: flex; }
+        .grid { display: grid; }
+    </style>
+</head>
+<body class="bg-dark-bg text-text-primary">
+    <!-- Landing Page -->
+    <div id="landing-page" class="min-h-screen sci-fi-bg relative overflow-hidden flex items-center justify-center">
+        <!-- 背景效果 -->
+        <div class="absolute inset-0 pointer-events-none">
+            <!-- 网格效果 -->
+            <div class="absolute inset-0 opacity-20 grid-bg"></div>
+            
+            <!-- 浮动粒子 -->
+            <div class="absolute top-1/4 left-1/4 w-4 h-4 bg-primary-cyan rounded-full animate-pulse opacity-60"></div>
+            <div class="absolute top-3/4 right-1/4 w-3 h-3 bg-accent-pink rounded-full animate-pulse opacity-40"></div>
+            <div class="absolute top-1/2 right-1/3 w-2 h-2 bg-primary-purple rounded-full animate-pulse opacity-50"></div>
+        </div>
+
+        <!-- 品牌Logo -->
+        <div class="absolute top-8 left-8 flex items-center gap-3 p-4 neural-card rounded-xl">
+            <div class="text-3xl text-accent-orange animate-pulse">₿</div>
+            <h2 class="font-orbitron font-bold text-xl text-text-primary">BitCoin DID</h2>
+        </div>
+
+        <!-- 主要内容 -->
+        <div class="text-center max-w-4xl mx-auto px-8">
+            <!-- 标题 -->
+            <h1 class="font-orbitron font-black text-6xl md:text-8xl mb-8 bg-gradient-to-r from-primary-cyan via-primary-blue to-primary-purple bg-clip-text text-transparent animate-glow">
+                <div>DECENTRALIZED</div>
+                <div>IDENTITY</div>
+            </h1>
+            
+            <!-- 下划线 -->
+            <div class="w-48 h-1 bg-gradient-to-r from-primary-cyan to-primary-blue mx-auto mb-8 rounded animate-glow"></div>
+
+            <!-- 副标题 -->
+            <p class="font-rajdhani text-xl text-text-secondary mb-12 max-w-2xl mx-auto leading-relaxed">
+                Next-generation DID protocol powered by Bitcoin UTXO technology.
+                <br />
+                Secure, decentralized, and truly yours.
+            </p>
+
+            <!-- 特性亮点 -->
+            <div class="flex justify-center gap-8 mb-16 flex-wrap">
+                <div class="neural-card min-w-36 hover:scale-105 p-6 rounded-2xl">
+                    <div class="text-3xl mb-2 filter drop-shadow-lg">🔒</div>
+                    <span class="font-orbitron text-sm text-text-accent">Quantum Secure</span>
+                </div>
+                <div class="neural-card min-w-36 hover:scale-105 p-6 rounded-2xl">
+                    <div class="text-3xl mb-2 filter drop-shadow-lg">⚡</div>
+                    <span class="font-orbitron text-sm text-text-accent">Lightning Fast</span>
+                </div>
+                <div class="neural-card min-w-36 hover:scale-105 p-6 rounded-2xl">
+                    <div class="text-3xl mb-2 filter drop-shadow-lg">🌐</div>
+                    <span class="font-orbitron text-sm text-text-accent">Decentralized</span>
+                </div>
+            </div>
+
+            <!-- CTA按钮 -->
+            <button onclick="showMyDIDsPage()" class="neural-btn text-lg px-12 py-4 rounded-lg relative overflow-hidden group">
+                <span class="relative z-10">LAUNCH DID</span>
+                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500"></div>
+            </button>
+
+            <!-- 状态指示器 -->
+            <div class="flex justify-center gap-8 mt-12">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 bg-primary-cyan rounded-full animate-pulse"></div>
+                    <span class="font-rajdhani text-sm text-text-secondary">Network: Online</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MyDIDs Page -->
+    <div id="my-dids-page" class="min-h-screen sci-fi-bg hidden">
+        <!-- 背景效果 -->
+        <div class="absolute inset-0 pointer-events-none opacity-30">
+            <div class="absolute top-1/5 left-1/6 w-2 h-2 bg-primary-cyan rounded-full animate-pulse"></div>
+            <div class="absolute top-2/5 right-1/4 w-2 h-2 bg-primary-cyan rounded-full animate-pulse" style="animation-delay: 0.5s;"></div>
+            <div class="absolute bottom-2/5 left-1/3 w-2 h-2 bg-primary-cyan rounded-full animate-pulse" style="animation-delay: 1s;"></div>
+        </div>
+
+        <!-- 头部 -->
+        <div class="bg-darker-bg/95 border-b-2 border-border-glow backdrop-blur-xl relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-primary-cyan/10 to-transparent animate-pulse"></div>
+            
+            <div class="relative z-10 px-8 py-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="text-3xl animate-spin" style="animation-duration: 4s;">⚡</div>
+                        <div>
+                            <h1 class="font-orbitron font-bold text-2xl text-text-primary tracking-wider">NEURAL DID MATRIX</h1>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-8">
+                        <div class="text-center">
+                            <div class="font-orbitron font-bold text-2xl text-primary-cyan animate-glow" id="active-did-count">2</div>
+                            <div class="font-rajdhani text-xs text-text-secondary uppercase tracking-wider">ACTIVE DIDS</div>
+                        </div>
+                        
+                        <div id="wallet-status" class="flex items-center gap-4 bg-card-bg border border-primary-cyan rounded-lg px-4 py-3 backdrop-blur-md hidden">
+                            <div>
+                                <div class="font-rajdhani text-xs text-text-secondary uppercase tracking-wider">CONNECTED</div>
+                                <div class="font-orbitron text-sm text-primary-cyan" id="wallet-address">bc1qxy2k...jhx0wlh</div>
+                            </div>
+                            <button onclick="disconnectWallet()" class="bg-accent-pink/20 border border-accent-pink text-accent-pink px-3 py-1 rounded text-xs font-orbitron hover:bg-accent-pink/30 transition-colors">
+                                DISCONNECT
+                            </button>
+                        </div>
+                        
+                        <button id="connect-wallet-btn" onclick="connectWallet()" class="bg-gradient-to-r from-primary-purple to-accent-pink text-text-primary font-orbitron font-semibold px-6 py-3 rounded-lg transition-all duration-300 border-none cursor-pointer" style="box-shadow: 0 0 20px rgba(128, 0, 255, 0.3);">
+                            CONNECT WALLET
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主要内容 -->
+        <div class="relative z-10 p-8">
+            <!-- 控制面板 -->
+            <div class="flex gap-8 mb-12">
+                <button onclick="initializeNewDID()" class="bg-gradient-to-r from-accent-orange to-primary-cyan text-text-primary font-orbitron font-semibold px-8 py-4 rounded-xl transition-all duration-300 border-none cursor-pointer flex items-center gap-3 relative overflow-hidden group" style="box-shadow: 0 0 25px rgba(255, 128, 0, 0.3);">
+                    <span class="text-xl animate-pulse">⚡</span>
+                    <span>INITIALIZE NEW DID</span>
+                    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500"></div>
+                </button>
+                
+                <div class="flex-1 relative">
+                    <div class="relative neural-card rounded-xl overflow-hidden">
+                        <input type="search" placeholder="Scan DID..." id="search-input" onkeyup="filterDIDs()" class="w-full bg-transparent border-none text-text-primary font-rajdhani text-lg px-4 py-4 pr-12 outline-none placeholder-text-secondary">
+                        <div class="absolute right-4 top-1/2 transform -translate-y-1/2 text-primary-cyan text-xl">🔍</div>
+                        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-primary-cyan/20 to-transparent animate-pulse" style="animation-duration: 2s;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DID网格 -->
+            <div id="did-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                <!-- DID卡片将通过JavaScript动态生成 -->
+            </div>
+        </div>
+
+        <!-- 返回按钮 -->
+        <button onclick="showLandingPage()" class="fixed bottom-8 left-8 neural-btn px-6 py-3 rounded-lg flex items-center gap-2">
+            <span>←</span>
+            <span>BACK TO LANDING</span>
+        </button>
+
+        <!-- 通知 -->
+        <div id="update-notification" class="fixed top-8 right-8 z-50 neural-card rounded-xl p-4 backdrop-blur-md animate-pulse hidden">
+            <div class="flex items-center gap-3">
+                <div class="text-xl animate-spin">⚙️</div>
+                <span class="font-orbitron font-semibold text-text-primary tracking-wider">NEURAL MATRIX UPDATED</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- DID Detail Page -->
+    <div id="detail-page" class="min-h-screen sci-fi-bg hidden">
+        <!-- 背景效果 -->
+        <div class="absolute inset-0 pointer-events-none opacity-30">
+            <div class="absolute top-1/5 left-1/6 w-2 h-2 bg-primary-cyan rounded-full animate-pulse"></div>
+            <div class="absolute top-2/5 right-1/4 w-2 h-2 bg-primary-cyan rounded-full animate-pulse" style="animation-delay: 0.5s;"></div>
+            <div class="absolute bottom-2/5 left-1/3 w-2 h-2 bg-primary-cyan rounded-full animate-pulse" style="animation-delay: 1s;"></div>
+        </div>
+
+        <!-- 头部导航 -->
+        <div class="bg-darker-bg/95 border-b-2 border-border-glow backdrop-blur-xl relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-primary-cyan/10 to-transparent animate-pulse"></div>
+            
+            <div class="relative z-10 px-8 py-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <button onclick="showMyDIDsPage()" class="neural-btn px-4 py-2 text-sm flex items-center gap-2">
+                            <span>←</span>
+                            <span>BACK</span>
+                        </button>
+                        <div class="text-3xl animate-spin" style="animation-duration: 4s;">⚡</div>
+                        <div>
+                            <h1 class="font-orbitron font-bold text-2xl text-text-primary tracking-wider">DID NEURAL INTERFACE</h1>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-4">
+                        <div id="unsaved-indicator" class="text-accent-orange font-rajdhani text-sm hidden">UNSAVED CHANGES</div>
+                        <button id="edit-alias-btn" onclick="toggleEditMode()" class="neural-btn px-4 py-2 text-sm">
+                            EDIT
+                        </button>
+                        <button id="save-alias-btn" onclick="toggleEditMode()" class="neural-btn px-4 py-2 text-sm hidden">
+                            <span id="save-btn-text">SAVE</span>
+                        </button>
+                        <button id="cancel-edit-btn" onclick="cancelEdit()" class="bg-text-secondary/20 border border-text-secondary text-text-secondary px-4 py-2 rounded text-sm font-orbitron hover:bg-text-secondary/30 transition-colors hidden">
+                            CANCEL
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主要内容 -->
+        <div class="relative z-10 p-8">
+            <div class="max-w-6xl mx-auto space-y-8">
+                <!-- Identity Core Panel -->
+                <div class="neural-card p-6 rounded-2xl border-primary-cyan">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="font-orbitron font-bold text-xl text-primary-cyan">IDENTITY CORE</h3>
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 bg-primary-cyan rounded-full animate-pulse"></div>
+                            <span class="font-rajdhani text-sm text-primary-cyan uppercase">ACTIVE</span>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <!-- Alias Row -->
+                        <div class="flex items-center justify-between">
+                            <label class="font-rajdhani text-sm text-text-secondary uppercase tracking-wider min-w-24">ALIAS:</label>
+                            <div class="flex-1 ml-4">
+                                <div id="alias-display">
+                                    <span id="detail-alias" class="font-orbitron text-text-primary">Primary Neural Interface</span>
+                                </div>
+                                <input type="text" id="alias-input" class="neural-input w-full rounded px-3 py-2 font-orbitron text-text-primary hidden">
+                            </div>
+                        </div>
+
+                        <!-- Full DID Row -->
+                        <div class="flex items-center justify-between">
+                            <label class="font-rajdhani text-sm text-text-secondary uppercase tracking-wider min-w-24">FULL DID:</label>
+                            <div class="flex-1 ml-4 flex items-center gap-2">
+                                <span id="detail-did" class="font-orbitron text-sm text-text-accent flex-1 break-all">did:btc:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh</span>
+                                <button onclick="copyToClipboard(document.getElementById('detail-did').textContent)" class="text-text-secondary hover:text-primary-cyan transition-colors p-1 rounded" title="Copy full DID">
+                                    📋
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Network Row -->
+                        <div class="flex items-center justify-between">
+                            <label class="font-rajdhani text-sm text-text-secondary uppercase tracking-wider min-w-24">NETWORK:</label>
+                            <div class="flex-1 ml-4">
+                                <span class="font-orbitron text-sm text-text-primary bg-primary-cyan/20 px-3 py-1 rounded">BITCOIN MAINNET</span>
+                            </div>
+                        </div>
+
+                        <!-- Created Row -->
+                        <div class="flex items-center justify-between">
+                            <label class="font-rajdhani text-sm text-text-secondary uppercase tracking-wider min-w-24">CREATED:</label>
+                            <div class="flex-1 ml-4">
+                                <span class="font-orbitron text-sm text-text-primary">2024-03-15 09:42:33 UTC</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Neural Bindings Panel -->
+                <div class="neural-card p-6 rounded-2xl">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="font-orbitron font-bold text-xl text-primary-cyan">NEURAL BINDINGS</h3>
+                        <div class="flex items-center gap-4">
+                            <span id="binding-count" class="font-rajdhani text-sm text-text-secondary">2 ACTIVE</span>
+                            <button id="add-binding-btn" onclick="showAddPublicKeyModal()" class="neural-btn px-3 py-1 text-sm hidden" title="Add new public key">
+                                ➕
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="neural-bindings-list" class="space-y-4">
+                        <!-- Neural bindings将通过JavaScript动态生成 -->
+                    </div>
+                    
+                    <!-- Add new binding form -->
+                    <div id="add-binding-form" class="mt-4 p-4 bg-darker-bg/50 border border-border-glow rounded-lg hidden">
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="font-rajdhani text-sm text-text-secondary uppercase tracking-wider">NEW PUBLIC KEY:</label>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="text" id="new-binding-input" class="neural-input flex-1 rounded px-3 py-2 font-orbitron text-text-primary" placeholder="Enter new public key...">
+                            <button onclick="confirmAddBinding()" class="bg-primary-cyan/20 border border-primary-cyan text-primary-cyan px-3 py-1 rounded text-sm font-orbitron hover:bg-primary-cyan/30 transition-colors" title="Confirm add">
+                                ✓
+                            </button>
+                            <button onclick="cancelAddBinding()" class="bg-error-red/20 border border-error-red text-error-red px-3 py-1 rounded text-sm font-orbitron hover:bg-error-red/30 transition-colors" title="Cancel add">
+                                ✕
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DID Document Panel -->
+                <div class="neural-card p-6 rounded-2xl">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="font-orbitron font-bold text-xl text-primary-cyan">DID DOCUMENT</h3>
+                        <button onclick="downloadDIDDocument()" class="neural-btn px-4 py-2 text-sm">
+                            DOWNLOAD
+                        </button>
+                    </div>
+                    
+                    <div class="bg-darker-bg/50 border border-border-glow rounded-lg p-4 max-h-96 overflow-y-auto">
+                        <pre class="text-sm text-text-secondary font-mono" id="did-document">
+{
+  "@context": [
+    "https://www.w3.org/ns/did/v1",
+    "https://w3id.org/security/suites/jws-2020/v1"
+  ],
+  "id": "did:btc:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+  "verificationMethod": [
+    {
+      "id": "did:btc:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh#keys-1",
+      "type": "EcdsaSecp256k1VerificationKey2019",
+      "controller": "did:btc:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+      "publicKeyHex": "03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd"
+    }
+  ],
+  "authentication": [
+    "did:btc:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh#keys-1"
+  ],
+  "assertionMethod": [
+    "did:btc:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh#keys-1"
+  ],
+  "service": [
+    {
+      "id": "did:btc:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh#neural-interface",
+      "type": "NeuralInterface",
+      "serviceEndpoint": "https://neural.quantum.net/interface"
+    }
+  ]
+}
+                        </pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 保存成功通知 -->
+        <div id="save-success-notification" class="fixed top-8 right-8 z-50 neural-card rounded-xl p-4 backdrop-blur-md animate-pulse hidden">
+            <div class="flex items-center gap-3">
+                <div class="text-xl">✅</div>
+                <span class="font-orbitron font-semibold text-text-primary tracking-wider">NEURAL LINK UPDATED</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 初始化DID模态框 -->
+    <div id="initialize-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="neural-card p-8 rounded-2xl max-w-md w-full mx-4">
+            <h2 class="font-orbitron font-bold text-2xl text-text-primary mb-6">INITIALIZE NEW DID</h2>
+            
+            <form onsubmit="submitNewDID(event)">
+                <div class="mb-6">
+                    <label class="block font-rajdhani text-sm text-text-secondary uppercase tracking-wider mb-2">ALIAS (REQUIRED)</label>
+                    <input type="text" id="did-alias" required class="neural-input w-full rounded-lg px-4 py-3 font-orbitron text-text-primary">
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block font-rajdhani text-sm text-text-secondary uppercase tracking-wider mb-2">PUBLIC KEY (REQUIRED)</label>
+                    <input type="text" id="did-public-key" required class="neural-input w-full rounded-lg px-4 py-3 font-orbitron text-text-primary" placeholder="Enter public key...">
+                </div>
+                
+                <div class="flex gap-4">
+                    <button type="button" onclick="closeInitializeModal()" class="flex-1 bg-text-secondary/20 border border-text-secondary text-text-secondary px-6 py-3 rounded-lg font-orbitron hover:bg-text-secondary/30 transition-colors">
+                        CANCEL
+                    </button>
+                    <button type="submit" class="flex-1 neural-btn px-6 py-3 rounded-lg">
+                        INITIALIZE
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 添加Public Key模态框 -->
+    <div id="add-public-key-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="neural-card p-8 rounded-2xl max-w-md w-full mx-4">
+            <h2 class="font-orbitron font-bold text-2xl text-text-primary mb-6">ADD PUBLIC KEY</h2>
+            
+            <form onsubmit="submitNewPublicKey(event)">
+                <div class="mb-6">
+                    <label class="block font-rajdhani text-sm text-text-secondary uppercase tracking-wider mb-2">PUBLIC KEY (REQUIRED)</label>
+                    <input type="text" id="new-public-key" required class="neural-input w-full rounded-lg px-4 py-3 font-orbitron text-text-primary" placeholder="Enter public key...">
+                    <div class="mt-2 text-xs text-text-secondary font-rajdhani">
+                        Minimum 10 characters required
+                    </div>
+                </div>
+                
+                <div class="flex gap-4">
+                    <button type="button" onclick="closeAddPublicKeyModal()" class="flex-1 bg-text-secondary/20 border border-text-secondary text-text-secondary px-6 py-3 rounded-lg font-orbitron hover:bg-text-secondary/30 transition-colors">
+                        CANCEL
+                    </button>
+                    <button type="submit" class="flex-1 neural-btn px-6 py-3 rounded-lg">
+                        ADD KEY
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 钱包连接模态框 -->
+    <div id="wallet-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="neural-card p-8 rounded-2xl max-w-md w-full mx-4">
+            <h2 class="font-orbitron font-bold text-2xl text-text-primary mb-6">CONNECT WALLET</h2>
+            
+            <div class="space-y-4">
+                <button onclick="connectSpecificWallet('unisat')" class="w-full neural-card p-4 rounded-lg hover:border-primary-cyan transition-colors flex items-center gap-4">
+                    <div class="w-12 h-12 bg-accent-orange rounded-lg flex items-center justify-center text-2xl">🦄</div>
+                    <div class="text-left">
+                        <div class="font-orbitron font-bold text-text-primary">Unisat Wallet</div>
+                        <div class="font-rajdhani text-sm text-text-secondary">Connect with Unisat</div>
+                    </div>
+                </button>
+                
+                <button onclick="connectSpecificWallet('okx')" class="w-full neural-card p-4 rounded-lg hover:border-primary-cyan transition-colors flex items-center gap-4">
+                    <div class="w-12 h-12 bg-primary-blue rounded-lg flex items-center justify-center text-2xl">🌐</div>
+                    <div class="text-left">
+                        <div class="font-orbitron font-bold text-text-primary">OKX Wallet</div>
+                        <div class="font-rajdhani text-sm text-text-secondary">Connect with OKX</div>
+                    </div>
+                </button>
+            </div>
+            
+            <button onclick="closeWalletModal()" class="w-full mt-6 bg-text-secondary/20 border border-text-secondary text-text-secondary px-6 py-3 rounded-lg font-orbitron hover:bg-text-secondary/30 transition-colors">
+                CANCEL
+            </button>
+        </div>
+    </div>
+
+    <!-- 确认对话框 -->
+    <div id="confirm-dialog" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="neural-card p-8 rounded-2xl max-w-md w-full mx-4">
+            <h2 id="confirm-title" class="font-orbitron font-bold text-2xl text-text-primary mb-4">CONFIRM ACTION</h2>
+            <p id="confirm-message" class="font-rajdhani text-text-secondary mb-6">Are you sure you want to proceed?</p>
+            
+            <div class="flex gap-4">
+                <button onclick="closeConfirmDialog()" class="flex-1 bg-text-secondary/20 border border-text-secondary text-text-secondary px-6 py-3 rounded-lg font-orbitron hover:bg-text-secondary/30 transition-colors">
+                    CANCEL
+                </button>
+                <button id="confirm-action-btn" onclick="confirmAction()" class="flex-1 bg-error-red/20 border border-error-red text-error-red px-6 py-3 rounded-lg font-orbitron hover:bg-error-red/30 transition-colors">
+                    CONFIRM
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 应用状态
+        let currentPage = 'landing';
+        let walletConnected = false;
+        let selectedDIDId = null;
+        let publicKeys = {
+            'publicKey1': '03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd',
+            'publicKey2': '02b4632d08485ff1df2db55b9dafd23347d1c47a457072a1e87be26896549a8737'
+        };
+
+        // DID数据
+        let dids = [
+            {
+                id: '1',
+                alias: 'Primary Neural Interface',
+                did: 'did:btc:bc1q...x7k9',
+                fullDid: 'did:btc:bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
+                createdDate: '2024-03-15',
+                status: 'active',
+                type: 'primary',
+                security: 'quantum-resistant',
+                network: 'mainnet',
+                controlAddress: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh'
+            },
+            {
+                id: '2',
+                alias: 'Corporate Identity Matrix',
+                did: 'did:btc:bc1p...m4n2',
+                fullDid: 'did:btc:bc1p5d7rjq7g6rdk2yhzks9smlaqtedr4dekq08ge8gwqrkm4n2kdh8s',
+                createdDate: '2024-01-22',
+                status: 'active',
+                type: 'corporate',
+                security: 'multi-sig',
+                network: 'mainnet',
+                controlAddress: 'bc1p5d7rjq7g6rdk2yhzks9smlaqtedr4dekq08ge8gwqrkm4n2kdh8s'
+            },
+            {
+                id: '3',
+                alias: 'Experimental Protocol',
+                did: 'did:btc:pending...sync',
+                fullDid: 'did:btc:pending-blockchain-synchronization',
+                createdDate: '2024-12-20',
+                status: 'pending',
+                type: 'experimental',
+                security: 'quantum-resistant',
+                network: 'mainnet',
+                remainingBlocks: 3,
+                progress: 67,
+                pendingTx: 'bc1q...a7f2',
+                controlAddress: 'bc1qpendingaddressexamplefortest123456789'
+            },
+            {
+                id: '4',
+                alias: 'Failed Quantum Bridge',
+                did: 'did:btc:failed...error',
+                fullDid: 'did:btc:failed-blockchain-synchronization',
+                createdDate: '2024-12-18',
+                status: 'failed',
+                type: 'experimental',
+                security: 'quantum-resistant',
+                network: 'mainnet'
+            },
+            {
+                id: '5',
+                alias: 'Enterprise Identity Hub',
+                did: 'did:btc:bc1p...k8m5',
+                fullDid: 'did:btc:bc1p7d8rjq7g6rdk2yhzks9smlaqtedr4dekq08ge8gwqrkm4n2kdh8s',
+                createdDate: '2024-12-10',
+                status: 'active-update-failed',
+                type: 'enterprise',
+                security: 'multi-sig',
+                network: 'mainnet',
+                controlAddress: 'bc1p7d8rjq7g6rdk2yhzks9smlaqtedr4dekq08ge8gwqrkm4n2kdh8s'
+            }
+        ];
+
+        // 页面导航函数
+        function showLandingPage() {
+            document.getElementById('landing-page').classList.remove('hidden');
+            document.getElementById('my-dids-page').classList.add('hidden');
+            document.getElementById('detail-page').classList.add('hidden');
+            currentPage = 'landing';
+        }
+
+        function showMyDIDsPage() {
+            document.getElementById('landing-page').classList.add('hidden');
+            document.getElementById('my-dids-page').classList.remove('hidden');
+            document.getElementById('detail-page').classList.add('hidden');
+            currentPage = 'my-dids';
+            renderDIDGrid();
+            updateActiveDIDCount();
+        }
+
+        function showDetailPage(didId, alias) {
+            const did = dids.find(d => d.id === didId);
+            if (did && did.status !== 'active') {
+                alert('只有状态为active的DID才能访问详情页面');
+                return;
+            }
+            
+            document.getElementById('landing-page').classList.add('hidden');
+            document.getElementById('my-dids-page').classList.add('hidden');
+            document.getElementById('detail-page').classList.remove('hidden');
+            
+            // 更新详情页面信息
+            document.getElementById('detail-alias').textContent = alias;
+            document.getElementById('detail-did').textContent = did.fullDid;
+            selectedDIDId = didId;
+            currentPage = 'detail';
+            renderPublicKeys();
+        }
+
+        // 工具函数
+        function formatAddress(address) {
+            if (!address || address.length <= 16) return address;
+            return `${address.slice(0, 8)}...${address.slice(-8)}`;
+        }
+
+        function getStatusColor(status) {
+            switch (status) {
+                case 'active': return 'border-primary-cyan bg-primary-cyan/10';
+                case 'pending': return 'border-accent-orange bg-accent-orange/10';
+                case 'failed': return 'border-error-red bg-error-red/10';
+                case 'active-update-failed': return 'border-error-red bg-error-red/10';
+                default: return 'border-text-secondary bg-text-secondary/10';
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showNotification('已复制到剪贴板');
+            });
+        }
+
+        function showNotification(message) {
+            const notification = document.getElementById('update-notification');
+            notification.querySelector('span').textContent = message;
+            notification.classList.remove('hidden');
+            setTimeout(() => {
+                notification.classList.add('hidden');
+            }, 3000);
+        }
+
+        // DID卡片渲染
+        function renderDIDCard(did, index) {
+            const statusColor = getStatusColor(did.status);
+            
+            return `
+                <div class="neural-card cursor-pointer ${statusColor} p-6 rounded-2xl" style="animation-delay: ${index * 0.1}s;" onclick="selectDID('${did.id}')">
+                    <!-- 卡片头部 -->
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl filter drop-shadow-lg">₿</span>
+                            <h3 class="font-orbitron font-bold text-lg text-text-primary">${did.alias}</h3>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full animate-pulse ${did.status === 'active' ? 'bg-primary-cyan' : did.status === 'pending' ? 'bg-accent-orange' : 'bg-error-red'}"></div>
+                            <span class="font-rajdhani text-xs text-text-secondary uppercase tracking-wider">
+                                ${did.status === 'active-update-failed' ? 'ACTIVE (UPDATE FAILED)' : did.status}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- 标题下划线 -->
+                    <div class="w-16 h-0.5 bg-gradient-to-r from-primary-cyan to-primary-blue mb-6 rounded"></div>
+
+                    <!-- DID地址 -->
+                    <div class="mb-6">
+                        <span class="font-rajdhani text-xs text-text-secondary uppercase tracking-wider block mb-2">DID ADDRESS:</span>
+                        <div class="flex items-center gap-2">
+                            <span class="font-orbitron text-sm text-text-accent flex-1">${did.did}</span>
+                            ${did.status === 'active' ? `
+                                <button onclick="event.stopPropagation(); copyToClipboard('${did.fullDid}')" class="text-text-secondary hover:text-primary-cyan transition-colors p-1 rounded" title="Copy full DID">
+                                    📋
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    ${did.status === 'pending' ? `
+                        <!-- 进度条 -->
+                        <div class="mb-6">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-rajdhani text-xs text-accent-orange uppercase tracking-wider">BLOCKCHAIN PENDING</span>
+                                <span class="font-rajdhani text-xs text-accent-orange">${did.remainingBlocks} blocks left</span>
+                            </div>
+                            <div class="w-full h-2 bg-accent-orange/20 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-accent-orange to-primary-cyan rounded-full transition-all duration-300 animate-glow" style="width: ${did.progress}%;"></div>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    ${(did.status === 'failed' || did.status === 'active-update-failed') ? `
+                        <!-- 错误消息 -->
+                        <div class="mb-6 p-4 bg-error-red/10 border border-error-red rounded-lg backdrop-blur-md">
+                            <div class="font-rajdhani text-sm font-semibold text-error-red uppercase tracking-wider mb-1">
+                                ${did.status === 'failed' ? 'Transaction Execution FAILED' : 'BINDING UPDATE FAILED'}
+                            </div>
+                            <div class="font-rajdhani text-xs text-text-secondary">
+                                ${did.status === 'failed' 
+                                    ? 'This transaction failed to execute on the blockchain and DID cannot be accessed.'
+                                    : 'DID is active but binding information update failed. You can dismiss this warning.'
+                                }
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <!-- 卡片底部信息 -->
+                    <div class="flex justify-between items-end gap-4">
+                        <div class="flex-1 space-y-2">
+                            <div class="flex justify-between">
+                                <span class="font-rajdhani text-xs text-text-secondary uppercase tracking-wider">CREATED:</span>
+                                <span class="font-orbitron text-xs text-text-primary">${did.createdDate}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="font-rajdhani text-xs text-text-secondary uppercase tracking-wider">NETWORK:</span>
+                                <span class="font-orbitron text-xs text-text-primary">${did.network?.toUpperCase()}</span>
+                            </div>
+                            ${((did.status === 'active' || did.status === 'active-update-failed' || did.status === 'pending') && did.controlAddress) ? `
+                                <div class="flex justify-between">
+                                    <span class="font-rajdhani text-xs text-text-secondary uppercase tracking-wider">CONTROL ADDRESS:</span>
+                                    <span class="font-orbitron text-xs text-primary-cyan">${formatAddress(did.controlAddress)}</span>
+                                </div>
+                            ` : ''}
+                            ${did.status === 'pending' && did.pendingTx ? `
+                                <div class="flex justify-between">
+                                    <span class="font-rajdhani text-xs text-text-secondary uppercase tracking-wider">PENDING TX:</span>
+                                    <span class="font-orbitron text-xs text-accent-orange">${did.pendingTx}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        ${did.status === 'active' ? `
+                            <button onclick="event.stopPropagation(); showDetailPage('${did.id}', '${did.alias}')" class="neural-btn text-xs px-4 py-2 rounded flex items-center gap-2">
+                                <span>ACCESS DID</span>
+                                <span>→</span>
+                            </button>
+                        ` : ''}
+                        
+                        ${did.status === 'active-update-failed' ? `
+                            <button onclick="event.stopPropagation(); dismissWarning('${did.id}', '${did.alias}')" class="bg-accent-orange/20 border border-accent-orange text-accent-orange text-xs px-4 py-2 rounded font-orbitron hover:bg-accent-orange/30 transition-colors">
+                                DISMISS
+                            </button>
+                        ` : ''}
+                        
+                        ${did.status === 'failed' ? `
+                            <button onclick="event.stopPropagation(); deleteDID('${did.id}', '${did.alias}')" class="bg-error-red/20 border border-error-red text-error-red text-xs px-4 py-2 rounded font-orbitron hover:bg-error-red/30 transition-colors">
+                                DELETE DID
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderDIDGrid() {
+            const grid = document.getElementById('did-grid');
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            
+            const filteredDIDs = dids.filter(did => 
+                did.alias.toLowerCase().includes(searchTerm) ||
+                did.did.toLowerCase().includes(searchTerm)
+            ).sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
+
+            if (filteredDIDs.length > 0) {
+                grid.innerHTML = filteredDIDs.map((did, index) => renderDIDCard(did, index)).join('');
+            } else {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-16">
+                        <div class="text-6xl mb-4 opacity-50">🔍</div>
+                        <h3 class="font-orbitron font-bold text-xl text-text-primary mb-2 tracking-wider">NO NEURAL INTERFACES FOUND</h3>
+                        <p class="font-rajdhani text-text-secondary">Initialize your first DID to begin your decentralized journey</p>
+                    </div>
+                `;
+            }
+        }
+
+        function filterDIDs() {
+            renderDIDGrid();
+        }
+
+        function selectDID(didId) {
+            // 这里可以添加选择DID的逻辑
+            console.log('Selected DID:', didId);
+        }
+
+        function updateActiveDIDCount() {
+            const activeCount = dids.filter(did => did.status === 'active').length;
+            document.getElementById('active-did-count').textContent = activeCount;
+        }
+
+        // 钱包管理
+        function connectWallet() {
+            document.getElementById('wallet-modal').classList.remove('hidden');
+        }
+
+        function connectSpecificWallet(walletType) {
+            // 模拟钱包连接
+            walletConnected = true;
+            document.getElementById('wallet-status').classList.remove('hidden');
+            document.getElementById('connect-wallet-btn').classList.add('hidden');
+            document.getElementById('wallet-modal').classList.add('hidden');
+            showNotification(`${walletType.toUpperCase()} 钱包连接成功`);
+        }
+
+        function closeWalletModal() {
+            document.getElementById('wallet-modal').classList.add('hidden');
+        }
+
+        function disconnectWallet() {
+            walletConnected = false;
+            document.getElementById('wallet-status').classList.add('hidden');
+            document.getElementById('connect-wallet-btn').classList.remove('hidden');
+            showNotification('钱包已断开连接');
+        }
+
+        // DID初始化
+        function initializeNewDID() {
+            if (!walletConnected) {
+                alert('Please connect your wallet first to initialize a new DID');
+                return;
+            }
+            document.getElementById('initialize-modal').classList.remove('hidden');
+        }
+
+        function closeInitializeModal() {
+            document.getElementById('initialize-modal').classList.add('hidden');
+            document.getElementById('did-alias').value = '';
+            document.getElementById('did-public-key').value = '';
+        }
+
+        function submitNewDID(event) {
+            event.preventDefault();
+            
+            const alias = document.getElementById('did-alias').value;
+            const publicKey = document.getElementById('did-public-key').value;
+            
+            if (!alias.trim() || !publicKey.trim()) {
+                alert('请填写所有必填字段');
+                return;
+            }
+
+            // 生成新的DID
+            const newId = (dids.length + 1).toString();
+            const newDID = {
+                id: newId,
+                alias: alias,
+                did: 'did:btc:pending...sync',
+                fullDid: 'did:btc:pending-blockchain-synchronization',
+                createdDate: new Date().toISOString().split('T')[0],
+                status: 'pending',
+                type: 'experimental',
+                security: 'quantum-resistant',
+                network: 'mainnet',
+                remainingBlocks: 5,
+                progress: 0,
+                pendingTx: 'bc1q' + Math.random().toString(36).substr(2, 8) + '...' + Math.random().toString(36).substr(2, 4),
+                controlAddress: 'bc1q' + Math.random().toString(36).substr(2, 32)
+            };
+
+            dids.unshift(newDID);
+            closeInitializeModal();
+            renderDIDGrid();
+            updateActiveDIDCount();
+            showNotification('新DID初始化成功');
+        }
+
+        // Neural Bindings管理
+        function renderNeuralBindings() {
+            const container = document.getElementById('neural-bindings-list');
+            const keys = Object.entries(publicKeys);
+            
+            container.innerHTML = keys.map(([key, value], index) => `
+                <div class="binding-row">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="font-rajdhani text-sm text-text-secondary uppercase tracking-wider">PUBLIC KEY ${index + 1}:</label>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        ${isEditingAlias ? `
+                            <input type="text" value="${value}" onchange="updatePublicKey('${key}', this.value)" class="neural-input flex-1 rounded px-3 py-2 font-orbitron text-text-primary" placeholder="Enter public key...">
+                            ${keys.length > 1 ? `
+                                <button onclick="confirmRemovePublicKey('${key}')" class="bg-error-red/20 border border-error-red text-error-red px-3 py-1 rounded text-sm font-orbitron hover:bg-error-red/30 transition-colors" title="Remove this public key">
+                                    ➖
+                                </button>
+                            ` : ''}
+                        ` : `
+                            <span class="font-orbitron text-sm text-text-accent flex-1 break-all">${value}</span>
+                            <button onclick="copyToClipboard('${value}')" class="text-text-secondary hover:text-primary-cyan transition-colors p-1 rounded" title="Copy public key">
+                                📋
+                            </button>
+                        `}
+                    </div>
+                </div>
+            `).join('');
+            
+            // 更新绑定计数
+            document.getElementById('binding-count').textContent = `${keys.length} ACTIVE`;
+        }
+
+        function updatePublicKey(key, value) {
+            publicKeys[key] = value;
+            showUnsavedChanges();
+        }
+
+        function showAddPublicKeyModal() {
+            if (isEditingAlias) {
+                // 在编辑模式下直接显示内联表单
+                document.getElementById('add-binding-form').classList.remove('hidden');
+                document.getElementById('new-binding-input').focus();
+            } else {
+                document.getElementById('add-public-key-modal').classList.remove('hidden');
+            }
+        }
+
+        function confirmAddBinding() {
+            const newKey = document.getElementById('new-binding-input').value.trim();
+            if (newKey && newKey.length >= 10) {
+                const keyId = `publicKey${Date.now()}`;
+                publicKeys[keyId] = newKey;
+                document.getElementById('new-binding-input').value = '';
+                document.getElementById('add-binding-form').classList.add('hidden');
+                renderNeuralBindings();
+                showUnsavedChanges();
+            } else {
+                alert('Public Key必须至少10个字符');
+            }
+        }
+
+        function cancelAddBinding() {
+            document.getElementById('new-binding-input').value = '';
+            document.getElementById('add-binding-form').classList.add('hidden');
+        }
+
+        function closeAddPublicKeyModal() {
+            document.getElementById('add-public-key-modal').classList.add('hidden');
+            document.getElementById('new-public-key').value = '';
+        }
+
+        function submitNewPublicKey(event) {
+            event.preventDefault();
+            const newKey = document.getElementById('new-public-key').value;
+            
+            if (newKey && newKey.trim() && newKey.trim().length >= 10) {
+                const keyId = `publicKey${Date.now()}`;
+                publicKeys[keyId] = newKey.trim();
+                renderNeuralBindings();
+                closeAddPublicKeyModal();
+                showNotification('Public Key添加成功');
+            } else {
+                alert('Public Key必须至少10个字符');
+            }
+        }
+
+        function confirmRemovePublicKey(keyId) {
+            if (isEditingAlias) {
+                // 在编辑模式下直接删除
+                delete publicKeys[keyId];
+                renderNeuralBindings();
+                showUnsavedChanges();
+            } else {
+                showConfirmDialog(
+                    'DELETE PUBLIC KEY',
+                    '确定要删除这个Public Key吗？此操作无法撤销。',
+                    () => {
+                        delete publicKeys[keyId];
+                        renderNeuralBindings();
+                        showNotification('Public Key删除成功');
+                    }
+                );
+            }
+        }
+
+        // DID详情页面功能
+        let isEditingAlias = false;
+        let originalAlias = '';
+        let originalPublicKeys = {};
+        let hasUnsavedChanges = false;
+
+        function toggleEditMode() {
+            if (isEditingAlias) {
+                // 保存模式
+                saveChanges();
+            } else {
+                // 编辑模式
+                startEditMode();
+            }
+        }
+
+        function startEditMode() {
+            isEditingAlias = true;
+            const aliasSpan = document.getElementById('detail-alias');
+            const aliasInput = document.getElementById('alias-input');
+            const aliasDisplay = document.getElementById('alias-display');
+            
+            originalAlias = aliasSpan.textContent;
+            originalPublicKeys = { ...publicKeys };
+            aliasInput.value = originalAlias;
+            
+            aliasDisplay.classList.add('hidden');
+            aliasInput.classList.remove('hidden');
+            
+            document.getElementById('edit-alias-btn').classList.add('hidden');
+            document.getElementById('save-alias-btn').classList.remove('hidden');
+            document.getElementById('cancel-edit-btn').classList.remove('hidden');
+            document.getElementById('add-binding-btn').classList.remove('hidden');
+            
+            aliasInput.focus();
+            aliasInput.addEventListener('input', showUnsavedChanges);
+            
+            renderNeuralBindings();
+        }
+
+        function cancelEdit() {
+            isEditingAlias = false;
+            hasUnsavedChanges = false;
+            
+            // 恢复原始值
+            document.getElementById('detail-alias').textContent = originalAlias;
+            document.getElementById('alias-input').value = originalAlias;
+            publicKeys = { ...originalPublicKeys };
+            
+            const aliasInput = document.getElementById('alias-input');
+            const aliasDisplay = document.getElementById('alias-display');
+            
+            aliasDisplay.classList.remove('hidden');
+            aliasInput.classList.add('hidden');
+            
+            document.getElementById('edit-alias-btn').classList.remove('hidden');
+            document.getElementById('save-alias-btn').classList.add('hidden');
+            document.getElementById('cancel-edit-btn').classList.add('hidden');
+            document.getElementById('add-binding-btn').classList.add('hidden');
+            document.getElementById('unsaved-indicator').classList.add('hidden');
+            
+            renderNeuralBindings();
+        }
+
+        function saveChanges() {
+            const newAlias = document.getElementById('alias-input').value.trim();
+            if (!newAlias) {
+                alert('神经接口别名不能为空！');
+                return;
+            }
+            
+            // 显示保存状态
+            const saveBtn = document.getElementById('save-btn-text');
+            saveBtn.textContent = 'SAVING...';
+            
+            // 模拟保存过程
+            setTimeout(() => {
+                // 更新显示
+                document.getElementById('detail-alias').textContent = newAlias;
+                
+                // 更新DID数据
+                const did = dids.find(d => d.id === selectedDIDId);
+                if (did) {
+                    did.alias = newAlias;
+                }
+                
+                isEditingAlias = false;
+                hasUnsavedChanges = false;
+                originalAlias = newAlias;
+                originalPublicKeys = { ...publicKeys };
+                
+                const aliasInput = document.getElementById('alias-input');
+                const aliasDisplay = document.getElementById('alias-display');
+                
+                aliasDisplay.classList.remove('hidden');
+                aliasInput.classList.add('hidden');
+                
+                document.getElementById('edit-alias-btn').classList.remove('hidden');
+                document.getElementById('save-alias-btn').classList.add('hidden');
+                document.getElementById('cancel-edit-btn').classList.add('hidden');
+                document.getElementById('add-binding-btn').classList.add('hidden');
+                document.getElementById('unsaved-indicator').classList.add('hidden');
+                
+                saveBtn.textContent = 'SAVE';
+                renderNeuralBindings();
+                showSaveSuccessNotification();
+            }, 1500);
+        }
+
+        function showUnsavedChanges() {
+            hasUnsavedChanges = true;
+            document.getElementById('unsaved-indicator').classList.remove('hidden');
+        }
+
+        function showSaveSuccessNotification() {
+            const notification = document.getElementById('save-success-notification');
+            notification.classList.remove('hidden');
+            setTimeout(() => {
+                notification.classList.add('hidden');
+            }, 3000);
+        }
+
+        function downloadDIDDocument() {
+            const didDoc = document.getElementById('did-document').textContent;
+            const blob = new Blob([didDoc], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'did-document.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showNotification('DID文档下载成功');
+        }
+
+        // 确认对话框
+        let confirmCallback = null;
+
+        function showConfirmDialog(title, message, callback) {
+            document.getElementById('confirm-title').textContent = title;
+            document.getElementById('confirm-message').textContent = message;
+            confirmCallback = callback;
+            document.getElementById('confirm-dialog').classList.remove('hidden');
+        }
+
+        function closeConfirmDialog() {
+            document.getElementById('confirm-dialog').classList.add('hidden');
+            confirmCallback = null;
+        }
+
+        function confirmAction() {
+            if (confirmCallback) {
+                confirmCallback();
+            }
+            closeConfirmDialog();
+        }
+
+        // DID操作
+        function dismissWarning(didId, didAlias) {
+            showConfirmDialog(
+                'DISMISS WARNING',
+                `确定要忽略DID "${didAlias}" 的更新失败警告并将状态设置为Active吗？`,
+                () => {
+                    const didIndex = dids.findIndex(d => d.id === didId);
+                    if (didIndex !== -1) {
+                        dids[didIndex].status = 'active';
+                        renderDIDGrid();
+                        updateActiveDIDCount();
+                        showNotification('警告已忽略，DID状态已更新');
+                    }
+                }
+            );
+        }
+
+        function deleteDID(didId, didAlias) {
+            showConfirmDialog(
+                'DELETE DID',
+                `确定要删除失败的DID "${didAlias}" 吗？此操作无法撤销。`,
+                () => {
+                    const didIndex = dids.findIndex(d => d.id === didId);
+                    if (didIndex !== -1) {
+                        dids.splice(didIndex, 1);
+                        renderDIDGrid();
+                        updateActiveDIDCount();
+                        showNotification('DID删除成功');
+                    }
+                }
+            );
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', function() {
+            renderDIDGrid();
+            updateActiveDIDCount();
+            renderNeuralBindings();
+        });
+    </script>
+</body>
+</html> 

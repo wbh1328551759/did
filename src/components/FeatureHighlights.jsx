@@ -11,7 +11,7 @@ const FeatureHighlights = () => {
       </div>
       <div className="feature-item">
         <div className="feature-icon">🌐</div>
-        <span>Globally Accessible</span>
+        <span>Accessible</span>
       </div>
     </div>
   )

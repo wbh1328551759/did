@@ -30,8 +30,12 @@ const InitializeDIDModal = ({ isOpen, onClose, onSubmit }) => {
       newErrors.alias = 'Please enter an alias'
     }
     
-    // Public Key不是必填字段，移除验证
-    // 用户可以选择填写或不填写
+    // Public Key现在是必填字段
+    if (!formData.publicKey.trim()) {
+      newErrors.publicKey = 'Public key is required'
+    } else if (formData.publicKey.trim().length < 10) {
+      newErrors.publicKey = 'Public key must be at least 10 characters'
+    }
     
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -137,19 +141,25 @@ const InitializeDIDModal = ({ isOpen, onClose, onSubmit }) => {
             {/* Binding (Public Key) */}
             <div className="form-group">
               <label className="form-label">
-                Binding (Public Key) <span className="optional-indicator">(Optional)</span>
+                Binding (Public Key) <span className="required-indicator">*</span>
               </label>
               <div className="input-wrapper">
                 <textarea
                   value={formData.publicKey}
                   onChange={(e) => handleInputChange('publicKey', e.target.value)}
-                  placeholder="Enter public key data (optional)..."
-                  className="neural-textarea"
+                  placeholder="Enter public key data (required)..."
+                  className={`neural-textarea ${errors.publicKey ? 'error' : ''}`}
                   rows="4"
                   disabled={isLoading}
                 />
                 <div className="input-glow"></div>
               </div>
+              {errors.publicKey && (
+                <div className="form-error-message">
+                  <span className="error-icon">⚠️</span>
+                  {errors.publicKey}
+                </div>
+              )}
             </div>
 
             {/* Action Buttons */}
