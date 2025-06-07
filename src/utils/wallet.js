@@ -35,17 +35,17 @@ export class OKXWalletConnector {
 
       // 获取OKX Wallet实例
       const okxWallet = window.okxwallet || window.okex
-      
+
       // 调试信息：打印可用的API
       console.log('OKX Wallet object:', okxWallet)
       console.log('Available methods:', Object.keys(okxWallet || {}))
       if (okxWallet && okxWallet.bitcoin) {
         console.log('Bitcoin methods:', Object.keys(okxWallet.bitcoin))
       }
-      
+
       // 尝试不同的连接方法
       let accounts = null
-      
+
       try {
         // 方法1: 尝试比特币专用API
         if (okxWallet.bitcoin && okxWallet.bitcoin.requestAccounts) {
@@ -54,7 +54,7 @@ export class OKXWalletConnector {
       } catch (e) {
         console.log('Bitcoin API not available, trying general method')
       }
-      
+
       if (!accounts || accounts.length === 0) {
         try {
           // 方法2: 尝试通用连接方法
@@ -63,7 +63,7 @@ export class OKXWalletConnector {
               method: 'wallet_requestPermissions',
               params: [{ bitcoin: {} }]
             })
-            
+
             if (!accounts || accounts.length === 0) {
               accounts = await okxWallet.request({
                 method: 'bitcoin_requestAccounts'
@@ -74,7 +74,7 @@ export class OKXWalletConnector {
           console.log('General request method failed, trying direct connect')
         }
       }
-      
+
       if (!accounts || accounts.length === 0) {
         try {
           // 方法3: 尝试直接连接
@@ -96,7 +96,7 @@ export class OKXWalletConnector {
           console.log('Mock connection failed')
         }
       }
-      
+
       if (accounts && accounts.length > 0) {
         this.account = accounts[0]
         this.wallet = okxWallet
@@ -183,11 +183,13 @@ export class OKXWalletConnector {
 
       const balance = await this.wallet.bitcoin.getBalance()
       const network = await this.wallet.bitcoin.getNetwork()
+      const publicKey = await this.getPublicKey()
 
       return {
         account: this.account,
         balance: balance,
-        network: network
+        network: network,
+        publicKey: publicKey
       }
     } catch (error) {
       console.error('Failed to get account info:', error)
@@ -207,6 +209,73 @@ export class OKXWalletConnector {
     } catch (error) {
       console.error('Failed to sign message:', error)
       throw error
+    }
+  }
+
+  // 签名PSBT
+  async signPsbt(psbtHex) {
+    try {
+      if (!this.isConnected || !this.wallet) {
+        throw new Error('Wallet not connected')
+      }
+
+      // OKX Wallet 签名PSBT
+      const signedPsbt = await this.wallet.bitcoin.signPsbt(psbtHex)
+      return signedPsbt
+    } catch (error) {
+      console.error('Failed to sign PSBT:', error)
+      throw error
+    }
+  }
+
+  // 获取公钥
+  async getPublicKey() {
+    try {
+      if (!this.isConnected || !this.wallet) {
+        throw new Error('Wallet not connected')
+      }
+
+      // 尝试多种方法获取公钥
+      try {
+        // 方法1: 直接获取公钥
+        if (this.wallet.bitcoin && this.wallet.bitcoin.getPublicKey) {
+          const publicKey = await this.wallet.bitcoin.getPublicKey()
+          return publicKey
+        }
+      } catch (e) {
+        console.log('Direct getPublicKey not available')
+      }
+
+      try {
+        // 方法2: 通过账户信息获取
+        if (this.wallet.bitcoin && this.wallet.bitcoin.getAccounts) {
+          const accounts = await this.wallet.bitcoin.getAccounts()
+          if (accounts && accounts[0] && accounts[0].publicKey) {
+            return accounts[0].publicKey
+          }
+        }
+      } catch (e) {
+        console.log('getAccounts method not available')
+      }
+
+      try {
+        // 方法3: 通用请求方法
+        if (this.wallet.request) {
+          const publicKey = await this.wallet.request({
+            method: 'bitcoin_getPublicKey'
+          })
+          return publicKey
+        }
+      } catch (e) {
+        console.log('Request method for publicKey not available')
+      }
+
+      // 如果所有方法都失败，返回null
+      console.warn('Unable to get public key from OKX Wallet')
+      return null
+    } catch (error) {
+      console.error('Failed to get public key:', error)
+      return null
     }
   }
 
@@ -255,10 +324,10 @@ export class UnisatWalletConnector {
       }
 
       const unisatWallet = window.unisat
-      
+
       // 请求连接
       const accounts = await unisatWallet.requestAccounts()
-      
+
       if (accounts && accounts.length > 0) {
         this.account = accounts[0]
         this.wallet = unisatWallet
@@ -296,7 +365,7 @@ export class UnisatWalletConnector {
       }
 
       // Unisat 钱包网络切换
-      await this.wallet.switchNetwork('livenet')
+      await this.wallet.switchNetwork('signet')
       return true
     } catch (error) {
       console.error('Failed to switch to Bitcoin mainnet:', error)
@@ -321,11 +390,13 @@ export class UnisatWalletConnector {
 
       const balance = await this.wallet.getBalance()
       const network = await this.wallet.getNetwork()
+      const publicKey = await this.getPublicKey()
 
       return {
         account: this.account,
         balance: balance,
-        network: network
+        network: network,
+        publicKey: publicKey
       }
     } catch (error) {
       console.error('Failed to get account info:', error)
@@ -345,6 +416,61 @@ export class UnisatWalletConnector {
     } catch (error) {
       console.error('Failed to sign message:', error)
       throw error
+    }
+  }
+
+  // 签名PSBT
+  async signPsbt(psbtHex) {
+    try {
+      if (!this.isConnected || !this.wallet) {
+        throw new Error('Wallet not connected')
+      }
+
+      // Unisat 签名PSBT
+      const signedPsbt = await this.wallet.signPsbt(psbtHex)
+      return signedPsbt
+    } catch (error) {
+      console.error('Failed to sign PSBT:', error)
+      throw error
+    }
+  }
+
+  // 获取公钥
+  async getPublicKey() {
+    try {
+      if (!this.isConnected || !this.wallet) {
+        throw new Error('Wallet not connected')
+      }
+
+      // 尝试多种方法获取公钥
+      try {
+        // 方法1: 直接获取公钥
+        if (this.wallet.getPublicKey) {
+          const publicKey = await this.wallet.getPublicKey()
+          return publicKey
+        }
+      } catch (e) {
+        console.log('Direct getPublicKey not available')
+      }
+
+      try {
+        // 方法2: 通过账户信息获取
+        if (this.wallet.getAccounts) {
+          const accounts = await this.wallet.getAccounts()
+          if (accounts && accounts[0] && accounts[0].publicKey) {
+            return accounts[0].publicKey
+          }
+        }
+      } catch (e) {
+        console.log('getAccounts method not available')
+      }
+
+      // 如果所有方法都失败，返回null
+      console.warn('Unable to get public key from Unisat Wallet')
+      return null
+    } catch (error) {
+      console.error('Failed to get public key:', error)
+      return null
     }
   }
 
@@ -385,7 +511,7 @@ export class WalletManager {
   async connectWallet(walletType) {
     try {
       let result
-      
+
       switch (walletType) {
         case 'okx':
           result = await this.okxWallet.connectWallet()
@@ -404,7 +530,7 @@ export class WalletManager {
         default:
           throw new Error(`Unsupported wallet type: ${walletType}`)
       }
-      
+
       return result
     } catch (error) {
       console.error('Failed to connect wallet:', error)
@@ -455,6 +581,22 @@ export class WalletManager {
     throw new Error('No wallet connected')
   }
 
+  // 签名PSBT
+  async signPsbt(psbtHex) {
+    if (this.currentWallet) {
+      return await this.currentWallet.signPsbt(psbtHex)
+    }
+    throw new Error('No wallet connected')
+  }
+
+  // 获取公钥
+  async getPublicKey() {
+    if (this.currentWallet) {
+      return await this.currentWallet.getPublicKey()
+    }
+    throw new Error('No wallet connected')
+  }
+
   // 监听账户变化
   onAccountsChanged(callback) {
     if (this.currentWallet) {
@@ -473,7 +615,6 @@ export class WalletManager {
 // 创建全局实例
 export const walletManager = new WalletManager()
 
-// 保持向后兼容性
 export const okxWallet = walletManager.okxWallet
 
 // 格式化比特币地址显示
@@ -486,4 +627,22 @@ export const formatBitcoinAddress = (address) => {
 export const formatBitcoinBalance = (balance) => {
   if (!balance) return '0'
   return `${(balance / 100000000).toFixed(8)} BTC`
-} 
+}
+
+export const isValidPsbt = (psbt) => {
+  if (!psbt) return false
+
+  // 检查是否为有效的十六进制字符串
+  const hexRegex = /^[0-9a-fA-F]+$/
+  if (typeof psbt === 'string' && hexRegex.test(psbt)) {
+    return true
+  }
+
+  // 检查是否为base64格式
+  try {
+    const base64Regex = /^[A-Za-z0-9+/]*(=|==)?$/
+    return typeof psbt === 'string' && base64Regex.test(psbt)
+  } catch (e) {
+    return false
+  }
+}

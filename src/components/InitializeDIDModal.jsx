@@ -1,11 +1,10 @@
 import { useState } from 'react'
 
-const InitializeDIDModal = ({ isOpen, onClose, onSubmit }) => {
+const InitializeDIDModal = ({ isOpen, onClose, onSubmit, isLoading = false }) => {
   const [formData, setFormData] = useState({
     alias: '',
     publicKey: ''
   })
-  const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState({})
 
   const handleInputChange = (field, value) => {
@@ -48,25 +47,16 @@ const InitializeDIDModal = ({ isOpen, onClose, onSubmit }) => {
       return
     }
     
-    setIsLoading(true)
-    
     try {
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      // 直接调用父组件的提交函数，不需要内部的加载状态
+      await onSubmit(formData)
       
-      // 调用父组件的提交函数
-      onSubmit(formData)
-      
-      // 重置表单
+      // 只有在成功时才重置表单
       setFormData({ alias: '', publicKey: '' })
       setErrors({})
-      
-      // 关闭弹窗
-      onClose()
     } catch (error) {
       console.error('DID initialization failed:', error)
-    } finally {
-      setIsLoading(false)
+      // 错误处理由父组件负责
     }
   }
 
