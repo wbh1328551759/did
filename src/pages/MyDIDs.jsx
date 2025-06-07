@@ -11,6 +11,7 @@ import BackgroundEffects from '../components/BackgroundEffects'
 import { useWallet } from '../hooks/useWallet'
 import { useDIDManager, usePsbtSigning } from '../hooks/useDID'
 import { useDIDStore } from '../store/didStore'
+import { detectKeyType, isValidPublicKey, getKeyTypeDisplayName } from '../utils/crypto'
 import { TX_STATUS } from '../types/did'
 
 const MyDIDs = () => {
@@ -87,10 +88,7 @@ const MyDIDs = () => {
     refreshDIDList,
     refreshTxStatus,
     clearError,
-  } = useDIDManager({
-    // 不需要再传 address 和 publicKey，会自动从钱包状态获取
-    watchTxid: monitoringTxid // 传入需要监控的交易ID
-  })
+  } = useDIDManager()
 
   // 使用 PSBT 签名 Hook
   const {
@@ -113,7 +111,7 @@ const MyDIDs = () => {
 
       // 显示更新消息
       if (shouldShowMessage) {
-        showSuccess('DID 信息已更新')
+        showSuccess('DID updated')
       }
 
       // 清除location state
@@ -124,16 +122,16 @@ const MyDIDs = () => {
   // 监控交易状态变化
   useEffect(() => {
     if (txStatus && monitoringTxid) {
-      console.log('交易状态更新:', txStatus)
+      console.log('Transaction status:', txStatus)
 
       if (txStatus.status === 'active') {
         // 交易已确认，刷新列表
         refreshDIDList()
         refreshSummary()
-        showSuccess('DID 创建成功！')
+        showSuccess('Created successfully')
       } else if (txStatus.status === 'failed') {
         // 交易失败
-        alert('DID 创建失败：交易未能确认')
+        alert('Failed to create DID: Transaction not confirmed')
       }
     }
   }, [txStatus, monitoringTxid, refreshDIDList, refreshSummary, showSuccess])
@@ -147,26 +145,26 @@ const MyDIDs = () => {
       did: did.did ? `did:btc:${did.did.substring(8, 16)}...${did.did.substring(did.did.length - 4)}` : 'pending...',
       fullDid: did.did,
       controller: did.controller,
-      
+
       // 时间信息
       createdDate: did.createdAt ? new Date(did.createdAt * 1000).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
       updatedDate: did.updatedAt ? new Date(did.updatedAt * 1000).toISOString().split('T')[0] : undefined,
-      
+
       // 状态信息
       status: did.status || 'pending',
       type: 'standard', // 默认类型
       security: 'standard', // 默认安全级别
       network: 'signet', // 当前使用 signet 网络
-      
+
       // 控制信息
       controlAddress: did.controller, // 使用 controller 字段
       controlUtxo: did.controlUtxo,
-      
+
       // 验证方法
       verificationMethods: did.verificationMethods || [],
       authentication: did.authentication || [],
       assertion: did.assertion || [],
-      
+
       // 对于 pending 状态的 DID，可以添加一些模拟的进度信息
       remainingBlocks: did.status === 'pending' ? 3 : undefined,
       progress: did.status === 'pending' ? 67 : undefined,
@@ -213,7 +211,7 @@ const MyDIDs = () => {
         setConfirmDialog({ ...confirmDialog, isOpen: false })
 
         // 显示删除成功消息
-        showSuccess('DID 已删除')
+        showSuccess('Deleted successfully')
       }
     })
   }
@@ -233,7 +231,7 @@ const MyDIDs = () => {
         setConfirmDialog({ ...confirmDialog, isOpen: false })
 
         // 显示成功消息
-        showSuccess('警告已解除')
+        showSuccess('Warning dismissed')
       }
     })
   }
@@ -244,7 +242,7 @@ const MyDIDs = () => {
 
   const handleInitializeDID = () => {
     if (!walletConnected) {
-      alert('请先连接钱包以创建新的 DID')
+      alert('Please connect wallet to create a new DID')
       return
     }
     setShowInitializeModal(true)
@@ -257,20 +255,38 @@ const MyDIDs = () => {
   const handleSubmitDID = async (formData) => {
     try {
       if (!walletConnected || !walletAccount) {
-        alert('请连接钱包！')
+        alert('Please connect wallet')
         return
       }
 
+      // 确定要使用的公钥
+      const targetPublicKey = formData.publicKey || publicKey
+
+      if (!targetPublicKey) {
+        alert('Public key not available. Please ensure your wallet is connected.')
+        return
+      }
+
+      // 验证公钥格式
+      if (!isValidPublicKey(targetPublicKey)) {
+        alert('Invalid public key format')
+        return
+      }
+
+      // 自动检测密钥类型
+      const detectedKeyType = detectKeyType(targetPublicKey)
+      console.log('Detected key type:', detectedKeyType, 'for public key:', targetPublicKey)
+
       // 显示创建进度
-      showSuccess('正在创建 DID...', 10000) // 10秒显示
+      showSuccess('Creating DID...', 10000) // 10秒显示
 
       // 1. 调用创建 DID API 获取 PSBT
       const createResult = await createDID({
         spendAddr: walletAccount,
         verificationCapabilities: 1, // 默认验证能力
         controlAddress: walletAccount,
-        subjectPublicKey: formData.publicKey || publicKey, // 使用表单公钥或钱包公钥
-        keyType: 'secp256k1'
+        subjectPublicKey: targetPublicKey,
+        keyType: detectedKeyType // 使用自动检测的密钥类型
       })
 
       if (createResult && createResult.psbt) {
@@ -283,7 +299,7 @@ const MyDIDs = () => {
           startMonitoring(signAndPushResult.commitTxid)
 
           // 显示正在监控交易状态的消息
-          showSuccess('交易已提交，正在等待确认...', 30000) // 30秒显示
+          showSuccess('Transaction submitted, waiting for confirmation...', 30000) // 30秒显示
 
           setShowInitializeModal(false)
 
@@ -298,7 +314,7 @@ const MyDIDs = () => {
 
       // 显示错误消息
       const errorMessage = error.message || 'Create DID failed'
-      alert(`错误: ${errorMessage}`)
+      alert(`Error: ${errorMessage}`)
 
       hideSuccess()
     }
@@ -321,7 +337,7 @@ const MyDIDs = () => {
     } catch (error) {
       console.error('Wallet connection error:', error)
       // 显示错误
-      alert(`钱包连接失败: ${error.message}`)
+      alert(`Wallet connection failed: ${error.message}`)
       throw error
     }
   }
@@ -336,9 +352,9 @@ const MyDIDs = () => {
   return (
     <div className="page sci-fi-page">
       {/* Update success notification */}
-      <UpdateNotification 
-        show={showSuccessMessage} 
-        message={successMessage} 
+      <UpdateNotification
+        show={showSuccessMessage}
+        message={successMessage}
         onClose={hideSuccess}
       />
 
@@ -369,11 +385,12 @@ const MyDIDs = () => {
 
         {/* Loading state */}
         {(didListLoading || txStatusLoading || isConnecting) && (
-          <div className="loading-state text-center py-8">
-            <div className="loading-spinner">
-              {isConnecting && '正在连接钱包...'}
-              {didListLoading && !isConnecting && '加载 DID 列表...'}
-              {txStatusLoading && !didListLoading && !isConnecting && '监控交易状态...'}
+          <div className="loading-state text-center py-8 w-full flex items-center gap-3 justify-center">
+            <div className="loading-spinner"/>
+            <div>
+              {isConnecting && 'Connecting wallet...'}
+              {didListLoading && !isConnecting && 'Loading DID list...'}
+              {txStatusLoading && !didListLoading && !isConnecting && 'Monitoring transaction status...'}
             </div>
           </div>
         )}
@@ -381,7 +398,7 @@ const MyDIDs = () => {
         {/* Connection error */}
         {connectionError && (
           <div className="error-state bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            <h3 className="font-semibold">钱包连接错误:</h3>
+            <h3 className="font-semibold">Wallet connection error:</h3>
             <p>{connectionError}</p>
           </div>
         )}
@@ -403,14 +420,14 @@ const MyDIDs = () => {
         {!didListLoading && filteredDIDs.length === 0 && walletConnected && (
           <div className="empty-state text-center py-8">
             <p className="text-gray-500 mb-4">
-              {searchTerm ? '没有找到匹配的 DID' : '您还没有 DID'}
+              {searchTerm ? 'No matching DID found' : 'You have no DID yet'}
             </p>
             {!searchTerm && (
               <button
                 onClick={handleInitializeDID}
-                className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                className="px-6 py-2 bg-blue-500 text-black rounded hover:bg-blue-600"
               >
-                创建您的第一个 DID
+                Create your first DID
               </button>
             )}
           </div>

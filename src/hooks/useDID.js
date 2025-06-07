@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import useSWR from 'swr';
 import didApiService from '../services/didApi.js';
 import { walletManager, isValidPsbt } from '../utils/wallet.js';
+import { detectKeyType, isValidPublicKey } from '../utils/crypto.js';
 import { useWalletConnection } from './useWallet.js';
 import { useDIDStore } from '../store/didStore.js';
 
@@ -34,7 +35,7 @@ export const useDID = () => {
    */
   const setLoading = useCallback((key, value) => {
     setLoadingStates(prev => ({ ...prev, [key]: value }));
-    
+
     // 同时更新 zustand store
     switch (key) {
       case 'creating':
@@ -55,7 +56,7 @@ export const useDID = () => {
   const setError = useCallback((key, error) => {
     const errorMessage = error?.message || error;
     setErrors(prev => ({ ...prev, [key]: errorMessage }));
-    
+
     // 同时更新 zustand store
     switch (key) {
       case 'create':
@@ -79,7 +80,7 @@ export const useDID = () => {
       delete newErrors[key];
       return newErrors;
     });
-    
+
     // 同时清除 zustand store 的错误
     clearError(key);
   }, [clearError]);
@@ -236,7 +237,7 @@ export const useTransactionStatus = (commitTxid, options = {}) => {
 export const useMyDIDs = (params, options = {}) => {
   // 从 zustand store 获取钱包信息
   const { account, publicKey } = useWalletConnection();
-  
+
   // 优先使用传入的参数，否则使用钱包状态
   const queryParams = {
     page: 1,
@@ -365,30 +366,31 @@ export const useMyDIDsPaginated = (config = {}) => {
 
 /**
  * 组合所有 DID 相关功能的主 Hook
- * 现在使用 zustand 状态管理
+ * 现在完全基于 zustand 状态管理，自动获取钱包状态
  * @param {Object} config - 配置参数
- * @param {string} [config.address] - 用户地址 (可选，会使用钱包状态)
- * @param {string} [config.publicKey] - 用户公钥 (可选，会使用钱包状态)
- * @param {string} [config.watchTxid] - 需要监控的交易ID
  * @param {boolean} [config.enablePagination] - 是否启用分页，默认false
  * @param {number} [config.initialPage] - 初始页码，默认为1
  * @param {number} [config.initialPageSize] - 初始页大小，默认为100（不分页时）或20（分页时）
  */
 export const useDIDManager = (config = {}) => {
-  const { address, publicKey, watchTxid, enablePagination = false, initialPage = 1, initialPageSize } = config;
-  
+  const {
+    enablePagination = false,
+    initialPage = 1,
+    initialPageSize
+  } = config;
+
+  // 从钱包状态获取 address 和 publicKey
+  const { account: walletAddress, publicKey: walletPublicKey } = useWalletConnection();
+
+  // 优先使用传入的参数，否则使用钱包状态
+  const address = walletAddress;
+  const publicKey = walletPublicKey;
+
   // 从 zustand store 获取监控状态
   const { monitoringTxid, startMonitoring, stopMonitoring } = useDIDStore();
 
   // 基础 DID 功能
   const didHook = useDID();
-
-  // 如果传入了 watchTxid 且与当前监控的不同，开始监控
-  useEffect(() => {
-    if (watchTxid && watchTxid !== monitoringTxid) {
-      startMonitoring(watchTxid);
-    }
-  }, [watchTxid, monitoringTxid, startMonitoring]);
 
   // 交易状态监控 - 使用 zustand store 中的 txid
   const txStatusHook = useTransactionStatus(monitoringTxid);
@@ -411,7 +413,7 @@ export const useDIDManager = (config = {}) => {
     ...didHook,
     ...txStatusHook,
     ...myDIDsHook,
-    
+
     // 添加监控控制
     monitoringTxid,
     startMonitoring,
@@ -426,13 +428,13 @@ export const useDIDManager = (config = {}) => {
 export const usePsbtSigning = () => {
   const [lastSignedPsbt, setLastSignedPsbt] = useState('')
   const [lastTxId, setLastTxId] = useState('')
-  
+
   // 使用 zustand store
-  const { 
-    isProcessing, 
+  const {
+    isProcessing,
     psbtError,
     setProcessingState,
-    showSuccess 
+    showSuccess
   } = useDIDStore()
 
   // 签名PSBT
@@ -441,11 +443,11 @@ export const usePsbtSigning = () => {
       setProcessingState(true, null)
 
       if (!walletManager.isConnected) {
-        throw new Error('钱包未连接，请先连接钱包')
+        throw new Error('Please connect wallet')
       }
 
       if (!isValidPsbt(psbtData)) {
-        throw new Error('PSBT数据格式无效')
+        throw new Error('Invalid PSBT data')
       }
 
       const signedPsbt = await walletManager.signPsbt(psbtData)
@@ -456,9 +458,9 @@ export const usePsbtSigning = () => {
         signedPsbt
       }
     } catch (err) {
-      const errorMessage = err.message || 'PSBT签名失败'
+      const errorMessage = err.message || 'Failed'
       setProcessingState(false, errorMessage)
-      console.error('PSBT签名失败:', err)
+      console.error('Signing failed:', err)
 
       return {
         success: false,
@@ -487,26 +489,26 @@ export const usePsbtSigning = () => {
         revealPsbt
       })
 
-      if (pushResult.success) {
-        const commitTxid = pushResult.data.commitTxid
+      if (pushResult.commitTxid) {
+        const commitTxid = pushResult.commitTxid
         setLastTxId(commitTxid)
-        
+
         // 显示成功消息
-        showSuccess('交易已提交，正在等待确认...')
-        
+        // showSuccess('交易已提交，正在等待确认...')
+
         return {
           success: true,
           commitTxid: commitTxid,
-          revealTxid: pushResult.data.revealTxid,
+          revealTxid: pushResult.revealTxid,
           signedPsbt: signResult.signedPsbt
         }
       } else {
         throw new Error(pushResult.error)
       }
     } catch (err) {
-      const errorMessage = err.message || '交易推送失败'
+      const errorMessage = err.message || 'Failed'
       setProcessingState(false, errorMessage)
-      console.error('签名并推送交易失败:', err)
+      console.error('Failed:', err)
 
       return {
         success: false,
@@ -521,13 +523,13 @@ export const usePsbtSigning = () => {
   const getPublicKey = useCallback(async () => {
     try {
       if (!walletManager.isConnected) {
-        throw new Error('钱包未连接，请先连接钱包')
+        throw new Error('Please connect wallet')
       }
 
       const publicKey = await walletManager.getPublicKey()
       return publicKey
     } catch (err) {
-      console.error('获取公钥失败:', err)
+      console.error('Get public key failed:', err)
       return null
     }
   }, [])

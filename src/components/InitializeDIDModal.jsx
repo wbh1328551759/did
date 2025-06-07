@@ -1,11 +1,33 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { detectKeyType, isValidPublicKey, getKeyTypeDisplayName } from '../utils/crypto'
 
-const InitializeDIDModal = ({ isOpen, onClose, onSubmit, isLoading = false }) => {
+const InitializeDIDModal = ({ isOpen, onClose, onSubmit, isLoading = false, defaultPublicKey = '' }) => {
   const [formData, setFormData] = useState({
     alias: '',
     publicKey: ''
   })
   const [errors, setErrors] = useState({})
+  const [detectedKeyType, setDetectedKeyType] = useState('')
+
+  // 当弹窗打开且有默认公钥时，设置表单数据
+  useEffect(() => {
+    if (isOpen && defaultPublicKey) {
+      setFormData(prev => ({
+        ...prev,
+        publicKey: defaultPublicKey
+      }))
+    }
+  }, [isOpen, defaultPublicKey])
+
+  // 监听公钥变化，实时检测密钥类型
+  useEffect(() => {
+    if (formData.publicKey.trim()) {
+      const keyType = detectKeyType(formData.publicKey.trim())
+      setDetectedKeyType(keyType)
+    } else {
+      setDetectedKeyType('')
+    }
+  }, [formData.publicKey])
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -32,8 +54,8 @@ const InitializeDIDModal = ({ isOpen, onClose, onSubmit, isLoading = false }) =>
     // Public Key现在是必填字段
     if (!formData.publicKey.trim()) {
       newErrors.publicKey = 'Public key is required'
-    } else if (formData.publicKey.trim().length < 10) {
-      newErrors.publicKey = 'Public key must be at least 10 characters'
+    } else if (!isValidPublicKey(formData.publicKey.trim())) {
+      newErrors.publicKey = 'Invalid public key format'
     }
     
     setErrors(newErrors)
@@ -144,6 +166,16 @@ const InitializeDIDModal = ({ isOpen, onClose, onSubmit, isLoading = false }) =>
                 />
                 <div className="input-glow"></div>
               </div>
+              
+              {/* 密钥类型检测显示 */}
+              {detectedKeyType && !errors.publicKey && (
+                <div className="key-type-info">
+                  <span className="key-type-label">Detected Key Type:</span>
+                  <span className="key-type-value">{getKeyTypeDisplayName(detectedKeyType)}</span>
+                  <span className="key-type-icon">🔑</span>
+                </div>
+              )}
+              
               {errors.publicKey && (
                 <div className="form-error-message">
                   <span className="error-icon">⚠️</span>

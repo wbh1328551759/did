@@ -133,26 +133,38 @@ import { useDIDManager } from '../hooks/useDID'
 import { useDIDStore } from '../store/didStore'
 
 const DIDComponent = () => {
-  // 使用综合管理 Hook
+  // 使用综合管理 Hook - 完全基于 zustand 状态管理
   const {
     didList,
     createDID,
     updateDID,
     txStatus,
     creating,
-    updating
+    updating,
+    monitoringTxid,
+    startMonitoring,
+    stopMonitoring
   } = useDIDManager({
     enablePagination: true,
     initialPageSize: 20
+    // 不需要传入 address、publicKey，自动从钱包状态获取
+    // 不需要传入 watchTxid，直接使用 zustand store 的监控状态
   })
 
-  // 使用 DID store 获取状态
+  // 使用 DID store 获取其他状态
   const {
-    monitoringTxid,
     showSuccessMessage,
     successMessage,
     hideSuccess
   } = useDIDStore()
+
+  // 开始监控新交易
+  const handleCreateDID = async (params) => {
+    const result = await createDID(params)
+    if (result.commitTxid) {
+      startMonitoring(result.commitTxid) // 开始监控交易
+    }
+  }
 
   return (
     <div>
@@ -160,6 +172,11 @@ const DIDComponent = () => {
       {didList.map(did => (
         <div key={did.id}>{did.alias}</div>
       ))}
+      
+      {/* 监控状态 */}
+      {monitoringTxid && (
+        <div>正在监控交易: {monitoringTxid}</div>
+      )}
       
       {/* 成功消息 */}
       {showSuccessMessage && (
@@ -220,6 +237,28 @@ persist(
 ```
 
 ## 迁移要点
+
+### 重要设计修正
+
+**问题**: 之前的 `useDIDManager` 设计存在逻辑混乱：
+- 试图从 config 参数获取 `address` 和 `publicKey`，但调用时没有传入
+- 同时使用 `watchTxid` 参数和 `monitoringTxid` 状态，造成重复
+
+**修正**: 现在完全基于 zustand 状态管理：
+```jsx
+// ❌ 之前的混乱设计
+const didManager = useDIDManager({
+  watchTxid: monitoringTxid  // 重复且混乱
+})
+
+// ✅ 现在的清晰设计  
+const didManager = useDIDManager({
+  enablePagination: true,
+  initialPageSize: 20
+  // address 和 publicKey 自动从钱包状态获取
+  // 监控状态直接从 zustand store 管理
+})
+```
 
 ### 从组件本地状态迁移
 
