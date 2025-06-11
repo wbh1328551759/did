@@ -1,9 +1,9 @@
-const DIDCard = ({ 
-  did, 
-  index, 
-  selectedDID, 
-  onSelect, 
-  onCopyToClipboard, 
+const DIDCard = ({
+  did,
+  index,
+  selectedDID,
+  onSelect,
+  onCopyToClipboard,
   onManageDID,
   onDeleteDID,
   onDismissWarning
@@ -13,7 +13,7 @@ const DIDCard = ({
       case 'active': return 'var(--primary-cyan)'
       case 'pending': return 'var(--accent-orange)'
       case 'failed': return 'var(--error-red)'
-      case 'active-update-failed': return 'var(--error-red)'
+      case 'update_failed': return 'var(--error-red)'
       default: return 'var(--text-secondary)'
     }
   }
@@ -37,12 +37,12 @@ const DIDCard = ({
           <h3 className="did-alias">{did.alias}</h3>
         </div>
         <div className="card-status">
-          <div 
+          <div
             className="status-indicator"
             style={{ backgroundColor: getStatusColor(did.status) }}
           ></div>
           <span className="status-text">
-            {did.status === 'active-update-failed' ? 'ACTIVE (UPDATE FAILED)' : did.status.toUpperCase()}
+            {did.status === 'update_failed' ? 'ACTIVE (UPDATE FAILED)' : did.status.toUpperCase()}
           </span>
         </div>
       </div>
@@ -82,7 +82,7 @@ const DIDCard = ({
             <span>{did.remainingBlocks} blocks left</span>
           </div>
           <div className="progress-bar">
-            <div 
+            <div
               className="progress-fill"
               style={{ width: `${did.progress}%` }}
             ></div>
@@ -103,10 +103,10 @@ const DIDCard = ({
       )}
 
       {/* Error Message for Update Failed DIDs */}
-      {did.status === 'active-update-failed' && (
+      {did.status === 'update_failed' && (
         <div className="error-message">
           <div className="error-title">
-            BINDING UPDATE FAILED
+            UPDATE FAILED
           </div>
           <div className="error-description">
             DID is active but binding information update failed. You can dismiss this warning.
@@ -125,11 +125,11 @@ const DIDCard = ({
             <span className="info-label">NETWORK:</span>
             <span className="info-value">{did.network?.toUpperCase()}</span>
           </div>
-          {(did.status === 'active' || did.status === 'active-update-failed') && did.controlAddress && (
+          {(did.status === 'active' || did.status === 'update_failed') && did.controlAddress && (
             <div className="info-item">
               <span className="info-label">CONTROL ADDRESS:</span>
               <span className="info-value control-address">
-                {did.controlAddress.length > 16 
+                {did.controlAddress.length > 16
                   ? `${did.controlAddress.slice(0, 8)}...${did.controlAddress.slice(-8)}`
                   : did.controlAddress
                 }
@@ -140,7 +140,7 @@ const DIDCard = ({
             <div className="info-item">
               <span className="info-label">CONTROL ADDRESS:</span>
               <span className="info-value control-address">
-                {did.controlAddress.length > 16 
+                {did.controlAddress.length > 16
                   ? `${did.controlAddress.slice(0, 8)}...${did.controlAddress.slice(-8)}`
                   : did.controlAddress
                 }
@@ -154,7 +154,7 @@ const DIDCard = ({
             </div>
           )}
         </div>
-        
+
         {did.status === 'active' && (
           <button
             onClick={(e) => {
@@ -168,7 +168,7 @@ const DIDCard = ({
           </button>
         )}
 
-        {did.status === 'active-update-failed' && (
+        {did.status === 'update_failed' && (
           <button
             onClick={(e) => {
               e.stopPropagation()
@@ -195,7 +195,7 @@ const DIDCard = ({
 
       {/* Card Glow Effect */}
       <div className="card-glow"></div>
-      
+
       {/* Data Stream Effect */}
       <div className="card-stream">
         <div className="stream-particle stream-1"></div>
@@ -206,4 +206,4 @@ const DIDCard = ({
   )
 }
 
-export default DIDCard 
+export default DIDCard

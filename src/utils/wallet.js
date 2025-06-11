@@ -136,8 +136,9 @@ export class OKXWalletConnector {
       // 尝试不同的网络切换方法
       try {
         // 方法1: OKX Wallet 比特币网络切换
+        // todo
         if (this.wallet.bitcoin && this.wallet.bitcoin.switchNetwork) {
-          await this.wallet.bitcoin.switchNetwork('livenet')
+          await this.wallet.bitcoin.switch('testnet')
           return true
         }
       } catch (e) {
@@ -282,23 +283,48 @@ export class OKXWalletConnector {
   // 监听账户变化
   onAccountsChanged(callback) {
     if (this.wallet && this.wallet.bitcoin) {
-      this.wallet.bitcoin.on('accountsChanged', (accounts) => {
-        if (accounts.length === 0) {
-          this.disconnect()
-        } else {
-          this.account = accounts[0]
-        }
-        callback(accounts)
-      })
+      try {
+        this.wallet.bitcoin.on('accountsChanged', (accounts) => {
+          console.log('OKX wallet accounts changed:', accounts)
+          if (accounts.length === 0) {
+            this.disconnect()
+          } else {
+            this.account = accounts[0]
+          }
+          callback(accounts)
+        })
+      } catch (e) {
+        console.warn('Failed to setup accountsChanged listener for OKX wallet:', e)
+      }
     }
   }
 
   // 监听网络变化
   onNetworkChanged(callback) {
     if (this.wallet && this.wallet.bitcoin) {
-      this.wallet.bitcoin.on('networkChanged', (network) => {
-        callback(network)
-      })
+      try {
+        this.wallet.bitcoin.on('networkChanged', (network) => {
+          console.log('OKX wallet network changed:', network)
+          callback(network)
+        })
+      } catch (e) {
+        console.warn('Failed to setup networkChanged listener for OKX wallet:', e)
+      }
+    }
+  }
+
+  // 监听钱包断开连接
+  onDisconnect(callback) {
+    if (this.wallet && this.wallet.bitcoin) {
+      try {
+        this.wallet.bitcoin.on('disconnect', () => {
+          console.log('OKX wallet disconnected')
+          this.disconnect()
+          callback()
+        })
+      } catch (e) {
+        console.warn('Failed to setup disconnect listener for OKX wallet:', e)
+      }
     }
   }
 }
@@ -364,8 +390,8 @@ export class UnisatWalletConnector {
         throw new Error('Wallet not connected')
       }
 
-      // Unisat 钱包网络切换
-      await this.wallet.switchNetwork('signet')
+      //todo
+      await this.wallet.switchChain('BITCOIN_SIGNET')
       return true
     } catch (error) {
       console.error('Failed to switch to Bitcoin mainnet:', error)
@@ -477,23 +503,48 @@ export class UnisatWalletConnector {
   // 监听账户变化
   onAccountsChanged(callback) {
     if (this.wallet) {
-      this.wallet.on('accountsChanged', (accounts) => {
-        if (accounts.length === 0) {
-          this.disconnect()
-        } else {
-          this.account = accounts[0]
-        }
-        callback(accounts)
-      })
+      try {
+        this.wallet.on('accountsChanged', (accounts) => {
+          console.log('Unisat wallet accounts changed:', accounts)
+          if (accounts.length === 0) {
+            this.disconnect()
+          } else {
+            this.account = accounts[0]
+          }
+          callback(accounts)
+        })
+      } catch (e) {
+        console.warn('Failed to setup accountsChanged listener for Unisat wallet:', e)
+      }
     }
   }
 
   // 监听网络变化
   onNetworkChanged(callback) {
     if (this.wallet) {
-      this.wallet.on('networkChanged', (network) => {
-        callback(network)
-      })
+      try {
+        this.wallet.on('networkChanged', (network) => {
+          console.log('Unisat wallet network changed:', network)
+          callback(network)
+        })
+      } catch (e) {
+        console.warn('Failed to setup networkChanged listener for Unisat wallet:', e)
+      }
+    }
+  }
+
+  // 监听钱包断开连接
+  onDisconnect(callback) {
+    if (this.wallet) {
+      try {
+        this.wallet.on('disconnect', () => {
+          console.log('Unisat wallet disconnected')
+          this.disconnect()
+          callback()
+        })
+      } catch (e) {
+        console.warn('Failed to setup disconnect listener for Unisat wallet:', e)
+      }
     }
   }
 }
@@ -608,6 +659,13 @@ export class WalletManager {
   onNetworkChanged(callback) {
     if (this.currentWallet) {
       this.currentWallet.onNetworkChanged(callback)
+    }
+  }
+
+  // 监听钱包断开连接
+  onDisconnect(callback) {
+    if (this.currentWallet && this.currentWallet.onDisconnect) {
+      this.currentWallet.onDisconnect(callback)
     }
   }
 }

@@ -16,7 +16,7 @@ export const useWallet = () => {
     network,
     isConnecting,
     connectionError,
-    
+
     // 方法
     connectWallet,
     disconnectWallet,
@@ -24,18 +24,19 @@ export const useWallet = () => {
     refreshAccountInfo,
     getPublicKey,
     setupWalletListeners,
-    clearConnectionError
+    clearConnectionError,
+    handleNetworkChange
   } = useWalletStore()
 
   // 组件挂载时设置监听器和自动重连
   useEffect(() => {
     setupWalletListeners()
-    
+
     // 页面加载时尝试自动重连
     const timer = setTimeout(() => {
       autoReconnect()
     }, 100) // 短延迟确保钱包扩展已加载
-    
+
     return () => clearTimeout(timer)
   }, [setupWalletListeners, autoReconnect])
 
@@ -45,11 +46,11 @@ export const useWallet = () => {
   const handleConnectWallet = async (walletType) => {
     try {
       const result = await connectWallet(walletType)
-      
+
       if (!result.success) {
         // 根据错误类型显示不同的消息
         let errorMessage = result.error
-        
+
         if (result.error.includes('not installed')) {
           const walletName = walletType === 'okx' ? 'OKX Wallet' : 'Unisat Wallet'
           const downloadUrl = walletType === 'okx' ? 'https://www.okx.com/web3' : 'https://unisat.io'
@@ -57,10 +58,10 @@ export const useWallet = () => {
         } else if (result.error.includes('rejected')) {
           errorMessage = '连接被拒绝。请重试并批准连接。'
         }
-        
+
         throw new Error(errorMessage)
       }
-      
+
       return result
     } catch (error) {
       console.error('钱包连接失败:', error)
@@ -94,18 +95,19 @@ export const useWallet = () => {
     network,
     isConnecting,
     connectionError,
-    
+
     // 方法
     connectWallet: handleConnectWallet,
     disconnectWallet,
     refreshAccountInfo,
     getPublicKey,
     clearConnectionError,
-    
+    handleNetworkChange,
+
     // 工具方法
     formatAddress,
     formatBalance,
-    
+
     // 计算属性
     formattedAddress: formatAddress(account),
     formattedBalance: formatBalance(balance),
@@ -118,11 +120,11 @@ export const useWallet = () => {
  */
 export const useWalletConnection = () => {
   const { isConnected, walletType, account, publicKey } = useWalletStore()
-  
+
   return {
     isConnected,
     walletType,
     account,
     publicKey
   }
-} 
+}

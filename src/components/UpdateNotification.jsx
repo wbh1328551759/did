@@ -1,4 +1,4 @@
-const UpdateNotification = ({ show, message = "神经接口矩阵已更新" }) => {
+const UpdateNotification = ({ show, message = "" }) => {
   if (!show) return null
 
   return (
@@ -11,4 +11,4 @@ const UpdateNotification = ({ show, message = "神经接口矩阵已更新" }) =
   )
 }
 
-export default UpdateNotification 
+export default UpdateNotification

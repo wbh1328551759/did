@@ -8,6 +8,7 @@ import ControlPanel from '../components/ControlPanel'
 import DIDGrid from '../components/DIDGrid'
 import UpdateNotification from '../components/UpdateNotification'
 import BackgroundEffects from '../components/BackgroundEffects'
+import WalletNetworkMonitor from '../components/WalletNetworkMonitor'
 import { useWallet } from '../hooks/useWallet'
 import { useDIDManager, usePsbtSigning } from '../hooks/useDID'
 import { useDIDStore } from '../store/didStore'
@@ -360,6 +361,11 @@ const MyDIDs = () => {
 
       {/* Animated background elements */}
       <BackgroundEffects />
+
+      {/* 钱包网络监控组件 (开发环境) */}
+      {/*{process.env.NODE_ENV === 'development' && (*/}
+      {/*  <WalletNetworkMonitor showDebugInfo={true} />*/}
+      {/*)}*/}
 
       {/* Header */}
       <PageHeader

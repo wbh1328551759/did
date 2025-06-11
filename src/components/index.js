@@ -28,4 +28,7 @@ export { default as SaveNotification } from './SaveNotification'
 
 // Modal Components
 export { default as InitializeDIDModal } from './InitializeDIDModal'
-export { default as WalletConnectModal } from './WalletConnectModal' 
+export { default as WalletConnectModal } from './WalletConnectModal'
+
+// Utility Components
+export { default as WalletNetworkMonitor } from './WalletNetworkMonitor'
