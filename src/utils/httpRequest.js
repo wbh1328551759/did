@@ -3,7 +3,7 @@ import axios from 'axios';
 // 环境变量配置
 const getBaseURL = () => {
   const env = import.meta.env.VITE_ENV || 'development';
-  
+
   if (env === 'production') {
     return 'https://did-api.geb.network';
   } else if (env === 'staging') {
@@ -46,12 +46,13 @@ httpRequest.interceptors.response.use(
   (error) => {
     // 对响应错误做点什么
     console.error('Response error:', error);
-    
-    if (error.response) {
-      // 服务器返回错误状态码
-      const { status, data } = error.response;
-      console.error(`API Error ${status}:`, data);
-      
+    return Promise.reject(error); // 重新抛出错误
+
+    // if (error.response) {
+    //   // 服务器返回错误状态码
+    //   const { status, data } = error.response;
+    //   console.error(`API Error ${status}:`, data);
+
     //   switch (status) {
     //     case 400:
     //       throw new Error(data?.message || '请求参数错误');
@@ -66,14 +67,14 @@ httpRequest.interceptors.response.use(
     //     default:
     //       throw new Error(data?.message || `请求失败 (${status})`);
     //   }
-    } else if (error.request) {
-      // 请求已发出但没有收到响应
-      throw new Error('network error, please try again later');
-    } else {
-      // 其他错误
-      throw new Error(error.message || 'unknown error');
-    }
+    // } else if (error.request) {
+    //   // 请求已发出但没有收到响应
+    //   throw new Error('network error, please try again later');
+    // } else {
+    //   // 其他错误
+    //   throw new Error(error.message || 'unknown error');
+    // }
   }
 );
 
-export default httpRequest; 
+export default httpRequest;

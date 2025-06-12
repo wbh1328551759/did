@@ -284,7 +284,7 @@ const MyDIDs = () => {
       // 1. 调用创建 DID API 获取 PSBT
       const createResult = await createDID({
         spendAddr: walletAccount,
-        verificationCapabilities: 1, // 默认验证能力
+        verificationCapabilities: 7, // 默认验证能力
         controlAddress: walletAccount,
         subjectPublicKey: targetPublicKey,
         keyType: detectedKeyType // 使用自动检测的密钥类型
@@ -295,7 +295,7 @@ const MyDIDs = () => {
         // 2. 使用 PSBT 签名 Hook 进行签名并推送
         const signAndPushResult = await signAndPushPsbt(createResult.psbt, formData.alias)
 
-        if (signAndPushResult.commitTxid) {
+        if (signAndPushResult?.commitTxid) {
           // 开始监控交易状态
           startMonitoring(signAndPushResult.commitTxid)
 

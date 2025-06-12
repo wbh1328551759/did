@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import useSWR from 'swr';
 import didApiService from '../services/didApi.js';
 import { walletManager, isValidPsbt } from '../utils/wallet.js';
-import { detectKeyType, isValidPublicKey } from '../utils/crypto.js';
+import {base64ToHex, hexToBase64} from '../utils/crypto.js';
 import { useWalletConnection } from './useWallet.js';
 import { useDIDStore } from '../store/didStore.js';
 
@@ -186,13 +186,13 @@ export const useDID = () => {
 
 /**
  * 监控交易状态的 Hook
- * 现在集成了 zustand 状态管理
- * @param {string} commitTxid - 交易ID
+ * 现在集成了 zustand 状态管理，直接从 store 获取监控的交易ID
  * @param {Object} options - SWR 选项
  */
-export const useTransactionStatus = (commitTxid, options = {}) => {
-  const shouldFetch = Boolean(commitTxid);
-  const { updateMonitoringStatus } = useDIDStore();
+export const useTransactionStatus = (options = {}) => {
+  const { monitoringTxid, updateMonitoringStatus, stopMonitoring } = useDIDStore();
+
+  const shouldFetch = Boolean(monitoringTxid);
 
   const {
     data: txStatus,
@@ -200,8 +200,8 @@ export const useTransactionStatus = (commitTxid, options = {}) => {
     isLoading: txStatusLoading,
     mutate: mutateTxStatus
   } = useSWR(
-    shouldFetch ? `/did/txStatus/${commitTxid}` : null,
-    () => didApiService.getTransactionStatus(commitTxid),
+    shouldFetch ? `/did/txStatus/${monitoringTxid}` : null,
+    () => didApiService.getTransactionStatus(monitoringTxid),
     {
       refreshInterval: (data) => {
         // 只有在交易状态为 pending 时才自动刷新
@@ -213,12 +213,20 @@ export const useTransactionStatus = (commitTxid, options = {}) => {
     }
   );
 
-  // 更新 zustand store 中的监控状态
+  // 更新 zustand store 中的监控状态，并在交易完成时停止监控
   useEffect(() => {
     if (txStatus && txStatus.status) {
       updateMonitoringStatus(txStatus.status);
+
+      // 交易完成或失败时，停止监控并清除 monitoringTxid
+      if (txStatus.status === 'active' || txStatus.status === 'failed') {
+        // 延迟停止监控，让用户能看到最终状态
+        setTimeout(() => {
+          stopMonitoring();
+        }, 3000);
+      }
     }
-  }, [txStatus, updateMonitoringStatus]);
+  }, [txStatus, updateMonitoringStatus, stopMonitoring]);
 
   return {
     txStatus,
@@ -242,10 +250,9 @@ export const useMyDIDs = (params, options = {}) => {
   const queryParams = {
     page: 1,
     pageSize: 100,
-    ...params,
     // 如果没有传入 address 或 publicKey，使用钱包状态
-    address: params.address || account,
-    publicKey: params.publicKey || publicKey,
+    address: account,
+    // publicKey: params.publicKey || publicKey,
   };
 
   // 确保至少有一个必需参数存在（address 或 publicKey）
@@ -393,7 +400,7 @@ export const useDIDManager = (config = {}) => {
   const didHook = useDID();
 
   // 交易状态监控 - 使用 zustand store 中的 txid
-  const txStatusHook = useTransactionStatus(monitoringTxid);
+  const txStatusHook = useTransactionStatus();
 
   // 我的 DID 列表 - 根据是否启用分页选择不同的Hook
   const myDIDsHook = enablePagination
@@ -440,17 +447,18 @@ export const usePsbtSigning = () => {
   // 签名PSBT
   const signPsbt = useCallback(async (psbtData) => {
     try {
+      const psbtHex = base64ToHex(psbtData)
       setProcessingState(true, null)
 
       if (!walletManager.isConnected) {
         throw new Error('Please connect wallet')
       }
 
-      if (!isValidPsbt(psbtData)) {
+      if (!isValidPsbt(psbtHex)) {
         throw new Error('Invalid PSBT data')
       }
 
-      const signedPsbt = await walletManager.signPsbt(psbtData)
+      const signedPsbt = await walletManager.signPsbt(psbtHex)
       setLastSignedPsbt(signedPsbt)
 
       return {
@@ -460,7 +468,6 @@ export const usePsbtSigning = () => {
     } catch (err) {
       const errorMessage = err.message || 'Failed'
       setProcessingState(false, errorMessage)
-      console.error('Signing failed:', err)
 
       return {
         success: false,
@@ -472,7 +479,7 @@ export const usePsbtSigning = () => {
   }, [setProcessingState])
 
   // 签名并推送PSBT交易
-  const signAndPushPsbt = useCallback(async (psbtData, alias, revealPsbt = null) => {
+  const signAndPushPsbt = useCallback(async (psbtData, alias, did = '', revealPsbt = '') => {
     try {
       setProcessingState(true, null)
 
@@ -485,12 +492,14 @@ export const usePsbtSigning = () => {
       // 2. 推送交易 - 使用正确的 PushTxRequest 参数
       const pushResult = await didApiService.pushTransaction({
         alias,
-        commitPsbt: signResult.signedPsbt,
-        revealPsbt
+        commitPsbt: hexToBase64(signResult.signedPsbt),
+        revealPsbt,
+        did,
       })
 
-      if (pushResult.commitTxid) {
+      if (pushResult?.commitTxid) {
         const commitTxid = pushResult.commitTxid
+
         setLastTxId(commitTxid)
 
         // 显示成功消息
@@ -502,11 +511,11 @@ export const usePsbtSigning = () => {
           revealTxid: pushResult.revealTxid,
           signedPsbt: signResult.signedPsbt
         }
-      } else {
-        throw new Error(pushResult.error)
       }
     } catch (err) {
+      console.log('errerr', err)
       const errorMessage = err.message || 'Failed'
+      console.log('errorMessage', errorMessage)
       setProcessingState(false, errorMessage)
       console.error('Failed:', err)
 

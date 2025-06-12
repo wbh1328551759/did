@@ -51,6 +51,7 @@
  * @typedef {Object} PushTxRequest
  * @property {string} alias - 用户填写的别名
  * @property {string} commitPsbt - 签名后的 commit PSBT
+ * @property {string} [did] - 要更新的did，如果是创建，那就不传（可选）
  * @property {string} [revealPsbt] - 签名后的 reveal PSBT（可选）
  */
 
@@ -142,4 +143,4 @@ export const TX_STATUS = {
 export const KEY_TYPES = {
   SECP256K1: 'secp256k1',
   ED25519: 'ed25519',
-}; 
+};

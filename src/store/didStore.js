@@ -7,24 +7,24 @@ import { create } from 'zustand'
 export const useDIDStore = create((set, get) => ({
   // 交易监控
   monitoringTxid: null,
-  monitoringStatus: null, // 'pending' | 'active' | 'failed'
-  
+  monitoringStatus: null, // 'pending' | 'active' | 'failed' | 'update_failed'
+
   // DID 操作状态
   isCreating: false,
   isUpdating: false,
   isPushing: false,
   isProcessing: false, // PSBT 签名等操作
-  
+
   // 错误状态
   createError: null,
   updateError: null,
   pushError: null,
   psbtError: null,
-  
+
   // 成功消息
   showSuccessMessage: false,
   successMessage: '',
-  
+
   /**
    * 开始监控交易
    * @param {string} txid - 交易ID
@@ -35,7 +35,7 @@ export const useDIDStore = create((set, get) => ({
       monitoringStatus: 'pending'
     })
   },
-  
+
   /**
    * 停止监控交易
    */
@@ -45,22 +45,15 @@ export const useDIDStore = create((set, get) => ({
       monitoringStatus: null
     })
   },
-  
+
   /**
    * 更新监控状态
    * @param {string} status - 状态
    */
   updateMonitoringStatus: (status) => {
     set({ monitoringStatus: status })
-    
-    // 如果交易完成或失败，3秒后自动停止监控
-    if (status === 'active' || status === 'failed') {
-      setTimeout(() => {
-        get().stopMonitoring()
-      }, 3000)
-    }
   },
-  
+
   /**
    * 设置创建状态
    * @param {boolean} isCreating
@@ -72,7 +65,7 @@ export const useDIDStore = create((set, get) => ({
       createError: error
     })
   },
-  
+
   /**
    * 设置更新状态
    * @param {boolean} isUpdating
@@ -84,7 +77,7 @@ export const useDIDStore = create((set, get) => ({
       updateError: error
     })
   },
-  
+
   /**
    * 设置推送状态
    * @param {boolean} isPushing
@@ -96,7 +89,7 @@ export const useDIDStore = create((set, get) => ({
       pushError: error
     })
   },
-  
+
   /**
    * 设置处理状态 (PSBT签名等)
    * @param {boolean} isProcessing
@@ -108,7 +101,7 @@ export const useDIDStore = create((set, get) => ({
       psbtError: error
     })
   },
-  
+
   /**
    * 显示成功消息
    * @param {string} message
@@ -119,7 +112,7 @@ export const useDIDStore = create((set, get) => ({
       showSuccessMessage: true,
       successMessage: message
     })
-    
+
     setTimeout(() => {
       set({
         showSuccessMessage: false,
@@ -127,7 +120,7 @@ export const useDIDStore = create((set, get) => ({
       })
     }, duration)
   },
-  
+
   /**
    * 隐藏成功消息
    */
@@ -137,7 +130,7 @@ export const useDIDStore = create((set, get) => ({
       successMessage: ''
     })
   },
-  
+
   /**
    * 清除所有错误
    */
@@ -149,7 +142,7 @@ export const useDIDStore = create((set, get) => ({
       psbtError: null
     })
   },
-  
+
   /**
    * 清除特定错误
    * @param {string} errorType - 错误类型
@@ -159,7 +152,7 @@ export const useDIDStore = create((set, get) => ({
     updates[`${errorType}Error`] = null
     set(updates)
   },
-  
+
   /**
    * 重置所有状态
    */
@@ -179,4 +172,4 @@ export const useDIDStore = create((set, get) => ({
       successMessage: ''
     })
   }
-})) 
+}))

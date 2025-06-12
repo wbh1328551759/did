@@ -45,36 +45,36 @@ const InitializeDIDModal = ({ isOpen, onClose, onSubmit, isLoading = false, defa
 
   const validateForm = () => {
     const newErrors = {}
-    
+
     // Alias是必填字段，任意字符任意长度
     if (!formData.alias.trim()) {
       newErrors.alias = 'Please enter an alias'
     }
-    
+
     // Public Key现在是必填字段
     if (!formData.publicKey.trim()) {
       newErrors.publicKey = 'Public key is required'
     } else if (!isValidPublicKey(formData.publicKey.trim())) {
       newErrors.publicKey = 'Invalid public key format'
     }
-    
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
+
     if (!validateForm()) {
       return
     }
-    
+
     try {
       // 直接调用父组件的提交函数，不需要内部的加载状态
       await onSubmit(formData)
-      
+
       // 只有在成功时才重置表单
-      setFormData({ alias: '', publicKey: '' })
+      setFormData(prev => ({ alias: '', ...prev }))
       setErrors({})
     } catch (error) {
       console.error('DID initialization failed:', error)
@@ -84,7 +84,7 @@ const InitializeDIDModal = ({ isOpen, onClose, onSubmit, isLoading = false, defa
 
   const handleClose = () => {
     if (!isLoading) {
-      setFormData({ alias: '', publicKey: '' })
+      setFormData(prev => ({ alias: '', ...prev }))
       setErrors({})
       onClose()
     }
@@ -115,7 +115,7 @@ const InitializeDIDModal = ({ isOpen, onClose, onSubmit, isLoading = false, defa
               <h2>Initialize New DID</h2>
               <div className="title-glow"></div>
             </div>
-            <button 
+            <button
               className="modal-close-btn"
               onClick={handleClose}
               disabled={isLoading}
@@ -166,7 +166,7 @@ const InitializeDIDModal = ({ isOpen, onClose, onSubmit, isLoading = false, defa
                 />
                 <div className="input-glow"></div>
               </div>
-              
+
               {/* 密钥类型检测显示 */}
               {detectedKeyType && !errors.publicKey && (
                 <div className="key-type-info">
@@ -175,7 +175,7 @@ const InitializeDIDModal = ({ isOpen, onClose, onSubmit, isLoading = false, defa
                   <span className="key-type-icon">🔑</span>
                 </div>
               )}
-              
+
               {errors.publicKey && (
                 <div className="form-error-message">
                   <span className="error-icon">⚠️</span>
@@ -226,4 +226,4 @@ const InitializeDIDModal = ({ isOpen, onClose, onSubmit, isLoading = false, defa
   )
 }
 
-export default InitializeDIDModal 
+export default InitializeDIDModal

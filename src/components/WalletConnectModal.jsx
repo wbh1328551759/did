@@ -28,7 +28,7 @@ const WalletConnectModal = ({ isOpen, onClose, onConnect }) => {
   const handleWalletConnect = async (walletId) => {
     setIsConnecting(true)
     setConnectingWallet(walletId)
-    
+
     try {
       await onConnect(walletId)
       onClose()
@@ -70,7 +70,7 @@ const WalletConnectModal = ({ isOpen, onClose, onConnect }) => {
               <h2>Connect Wallet</h2>
               <div className="wallet-title-glow"></div>
             </div>
-            <button 
+            <button
               className="wallet-modal-close-btn"
               onClick={handleClose}
               disabled={isConnecting}
@@ -84,10 +84,26 @@ const WalletConnectModal = ({ isOpen, onClose, onConnect }) => {
             <div className="wallet-description">
               <p>Choose a wallet to connect to BitCoin DID</p>
             </div>
+            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-start space-x-2">
+                <svg className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor"
+                     viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                </svg>
+                <div className="text-sm">
+                  <p className="font-medium text-yellow-800 mb-1">Address Type Requirement</p>
+                  <p className="text-yellow-700">
+                    This application only supports <strong>Taproot address</strong> (starts with bc1p).
+                    Please ensure your wallet is switched to Taproot address type.
+                  </p>
+                </div>
+              </div>
+            </div>
 
             <div className="wallet-options">
               {wallets.map((wallet) => (
-                <div 
+                <div
                   key={wallet.id}
                   className={`wallet-option ${connectingWallet === wallet.id ? 'connecting' : ''}`}
                   onClick={() => !isConnecting && handleWalletConnect(wallet.id)}
@@ -95,7 +111,7 @@ const WalletConnectModal = ({ isOpen, onClose, onConnect }) => {
                   <div className="wallet-option-content">
                     <div className="wallet-option-icon">
                       {wallet.iconType === 'svg' ? (
-                        <img src={wallet.icon} alt={wallet.name} style={{ width: '32px', height: '32px' }} />
+                        <img src={wallet.icon} alt={wallet.name} style={{width: '32px', height: '32px'}}/>
                       ) : (
                         wallet.icon
                       )}
@@ -112,7 +128,7 @@ const WalletConnectModal = ({ isOpen, onClose, onConnect }) => {
                       )}
                     </div>
                   </div>
-                  
+
                   {connectingWallet === wallet.id && (
                     <div className="wallet-connecting-overlay">
                       <div className="connecting-text">Connecting...</div>
@@ -134,4 +150,4 @@ const WalletConnectModal = ({ isOpen, onClose, onConnect }) => {
   )
 }
 
-export default WalletConnectModal 
+export default WalletConnectModal

@@ -133,4 +133,89 @@ export const getKeyTypeDisplayName = (keyType) => {
   }
   
   return displayNames[keyType] || keyType
+}
+
+/**
+ * Base64 转 Hex
+ * @param {string} base64String - Base64编码的字符串
+ * @returns {string} 十六进制字符串
+ */
+export function base64ToHex(base64String) {
+  try {
+    if (!base64String) {
+      throw new Error('Base64 string is required')
+    }
+
+    // 移除可能的前缀和后缀空格
+    const cleanBase64 = base64String.trim()
+    
+    // 验证Base64格式
+    const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/
+    if (!base64Regex.test(cleanBase64)) {
+      throw new Error('Invalid base64 format')
+    }
+    
+    // 使用atob解码base64字符串为binary string
+    const binaryString = atob(cleanBase64)
+    
+    // 将binary string转换为hex字符串
+    let hexString = ''
+    for (let i = 0; i < binaryString.length; i++) {
+      // 获取字符的字节值(0-255)
+      const byte = binaryString.charCodeAt(i) & 0xFF
+      // 转换为2位的十六进制字符串，不足2位前面补0
+      const hex = byte.toString(16).toLowerCase().padStart(2, '0')
+      hexString += hex
+    }
+    
+    return hexString
+  } catch (error) {
+    console.error('Base64 to Hex conversion failed:', error)
+    throw new Error(`Invalid base64 string: ${error.message}`)
+  }
+}
+
+/**
+ * Hex 转 Base64
+ * @param {string} hexString - 十六进制字符串
+ * @returns {string} Base64编码的字符串
+ */
+export function hexToBase64(hexString) {
+  try {
+    if (!hexString) {
+      throw new Error('Hex string is required')
+    }
+
+    // 移除可能的0x前缀和空格
+    const cleanHex = hexString.replace(/^0x/i, '').trim().toLowerCase()
+    
+    // 验证十六进制格式
+    const hexRegex = /^[0-9a-f]*$/
+    if (!hexRegex.test(cleanHex)) {
+      throw new Error('Invalid hex format - only 0-9 and a-f characters allowed')
+    }
+    
+    // 确保十六进制字符串长度为偶数
+    if (cleanHex.length % 2 !== 0) {
+      throw new Error('Invalid hex string length - must be even number of characters')
+    }
+    
+    // 将hex字符串转换为binary string
+    let binaryString = ''
+    for (let i = 0; i < cleanHex.length; i += 2) {
+      const hexByte = cleanHex.substring(i, i + 2)
+      const byte = parseInt(hexByte, 16)
+      if (isNaN(byte)) {
+        throw new Error(`Invalid hex byte: ${hexByte}`)
+      }
+      // 将字节值转换为字符
+      binaryString += String.fromCharCode(byte)
+    }
+    
+    // 使用btoa编码为base64字符串
+    return btoa(binaryString)
+  } catch (error) {
+    console.error('Hex to Base64 conversion failed:', error)
+    throw new Error(`Invalid hex string: ${error.message}`)
+  }
 } 

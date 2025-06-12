@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { walletManager } from '../utils/wallet'
+import { validateTaprootAddress } from '../utils/detectBtcAddress'
 
 /**
  * 钱包状态管理 Store
@@ -37,6 +38,19 @@ export const useWalletStore = create(
           const result = await walletManager.connectWallet(walletType)
 
           if (result.success) {
+            // 验证地址类型 - 只允许 Taproot 地址
+            const validation = validateTaprootAddress(result.account)
+            if (!validation.isValid) {
+              // 断开连接
+              walletManager.disconnect()
+              
+              set({
+                isConnecting: false,
+                connectionError: validation.error
+              })
+              return { success: false, error: validation.error }
+            }
+
             // 获取公钥
             let publicKey = null
             try {
@@ -219,9 +233,17 @@ export const useWalletStore = create(
             const newAccount = accounts[0]
             const currentAccount = get().account
 
+            // 验证新账户是否为 Taproot 地址
+            const validation = validateTaprootAddress(newAccount)
+            if (!validation.isValid) {
+              set({ connectionError: validation.error })
+              get().disconnectWallet()
+              return
+            }
+
             // 如果账户发生变化，更新状态并刷新信息
             if (newAccount !== currentAccount) {
-              set({ account: newAccount })
+              set({ account: newAccount, connectionError: null })
 
               // 账户变化时重新获取公钥和其他信息
               setTimeout(() => {
@@ -301,6 +323,7 @@ export const useWalletStore = create(
         const state = get()
         if (!state.isConnected) return
 
+        console.log(`网络变化: ${state.network} -> ${newNetwork}`)
 
         // 更新网络状态
         set({ network: newNetwork })
@@ -312,11 +335,20 @@ export const useWalletStore = create(
           // 重新获取完整的账户信息
           const accountInfo = await walletManager.getAccountInfo()
           if (accountInfo) {
+            // 验证账户地址是否仍为 Taproot 类型
+            const validation = validateTaprootAddress(accountInfo.account)
+            if (!validation.isValid) {
+              set({ connectionError: validation.error })
+              get().disconnectWallet()
+              return
+            }
+
             const updates = {
               account: accountInfo.account,
               balance: accountInfo.balance,
               network: accountInfo.network,
-              publicKey: accountInfo.publicKey
+              publicKey: accountInfo.publicKey,
+              connectionError: null
             }
 
             set(updates)
@@ -330,7 +362,7 @@ export const useWalletStore = create(
             }
           }
         } catch (error) {
-          console.error('Error:', error)
+          console.error('处理网络变化时出错:', error)
         }
       },
 
