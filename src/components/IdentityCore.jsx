@@ -52,17 +52,17 @@ const IdentityCore = ({
       <div className="panel-content">
         <div className="info-row">
           <label className="info-label">ALIAS:</label>
-          {isEditing ? (
-            <input
-              type="text"
-              value={alias}
-              onChange={(e) => onAliasChange(e.target.value)}
-              className="neural-input"
-              placeholder="Enter DID alias..."
-            />
-          ) : (
+          {/*{isEditing ? (*/}
+          {/*  <input*/}
+          {/*    type="text"*/}
+          {/*    value={alias}*/}
+          {/*    onChange={(e) => onAliasChange(e.target.value)}*/}
+          {/*    className="neural-input"*/}
+          {/*    placeholder="Enter DID alias..."*/}
+          {/*  />*/}
+          {/*) : (*/}
             <span className="info-value">{alias || 'Unnamed DID'}</span>
-          )}
+          {/*)}*/}
         </div>
         <div className="info-row">
           <label className="info-label">FULL DID:</label>

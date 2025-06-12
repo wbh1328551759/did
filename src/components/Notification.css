@@ -1,0 +1,250 @@
+/* 通知容器 */
+.notification-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 400px;
+  pointer-events: none;
+}
+
+/* 单个通知 */
+.notification {
+  pointer-events: auto;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(12px);
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow: 
+    0 10px 25px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  position: relative;
+  transform: translateX(100%);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 320px;
+  max-width: 400px;
+}
+
+/* 进入动画 */
+.notification-enter {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* 退出动画 */
+.notification-exit {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+/* 通知内容 */
+.notification-content {
+  display: flex;
+  align-items: flex-start;
+  padding: 16px;
+  gap: 12px;
+}
+
+/* 图标容器 */
+.notification-icon-wrapper {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.notification-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* 文本内容 */
+.notification-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-title {
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.4;
+  margin-bottom: 4px;
+  color: #f1f5f9;
+}
+
+.notification-message {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #cbd5e1;
+  word-wrap: break-word;
+}
+
+/* 关闭按钮 */
+.notification-close {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: none;
+  color: #64748b;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  margin-top: 2px;
+}
+
+.notification-close:hover {
+  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.notification-close svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* 进度条 */
+.notification-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, currentColor, transparent);
+  width: 100%;
+  transform-origin: left;
+  animation: notification-progress linear forwards;
+}
+
+@keyframes notification-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/* 不同类型的通知样式 */
+.notification-success {
+  border-left: 4px solid #10b981;
+}
+
+.notification-success .notification-icon-wrapper {
+  color: #10b981;
+}
+
+.notification-success .notification-progress {
+  color: #10b981;
+}
+
+.notification-error {
+  border-left: 4px solid #ef4444;
+}
+
+.notification-error .notification-icon-wrapper {
+  color: #ef4444;
+}
+
+.notification-error .notification-progress {
+  color: #ef4444;
+}
+
+.notification-warning {
+  border-left: 4px solid #f59e0b;
+}
+
+.notification-warning .notification-icon-wrapper {
+  color: #f59e0b;
+}
+
+.notification-warning .notification-progress {
+  color: #f59e0b;
+}
+
+.notification-info {
+  border-left: 4px solid #3b82f6;
+}
+
+.notification-info .notification-icon-wrapper {
+  color: #3b82f6;
+}
+
+.notification-info .notification-progress {
+  color: #3b82f6;
+}
+
+/* 响应式设计 */
+@media (max-width: 640px) {
+  .notification-container {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
+  }
+  
+  .notification {
+    min-width: auto;
+    max-width: none;
+  }
+  
+  .notification-content {
+    padding: 14px;
+  }
+  
+  .notification-title {
+    font-size: 13px;
+  }
+  
+  .notification-message {
+    font-size: 12px;
+  }
+}
+
+/* 暗色主题增强 */
+@media (prefers-color-scheme: dark) {
+  .notification {
+    background: rgba(15, 23, 42, 0.98);
+    border-color: rgba(148, 163, 184, 0.3);
+  }
+}
+
+/* 高对比度模式 */
+@media (prefers-contrast: high) {
+  .notification {
+    border-width: 2px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+  
+  .notification-title {
+    color: #ffffff;
+  }
+  
+  .notification-message {
+    color: #e2e8f0;
+  }
+}
+
+/* 减少动画模式 */
+@media (prefers-reduced-motion: reduce) {
+  .notification {
+    transition: opacity 0.2s ease;
+  }
+  
+  .notification-progress {
+    animation: none;
+    background: linear-gradient(90deg, currentColor, currentColor);
+    transform: scaleX(0);
+  }
+} 

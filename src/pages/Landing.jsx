@@ -4,14 +4,14 @@ import LandingHeader from '../components/LandingHeader'
 import HeroSection from '../components/HeroSection'
 import LandingBackgroundEffects from '../components/LandingBackgroundEffects'
 
-const Landing = () => {
+const Landing = ({ notification }) => {
   const navigate = useNavigate()
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(() => {
     setIsLoaded(true)
-    
+
     const handleMouseMove = (e) => {
       setMousePosition({
         x: (e.clientX / window.innerWidth) * 100,
@@ -27,8 +27,6 @@ const Landing = () => {
     navigate('/my-dids')
   }
 
-
-
   return (
     <div className="page landing-page">
       {/* Background Effects */}
@@ -39,8 +37,9 @@ const Landing = () => {
 
       {/* Main content */}
       <HeroSection isLoaded={isLoaded} onLaunchDID={handleLaunchDID} />
+
     </div>
   )
 }
 
-export default Landing 
+export default Landing

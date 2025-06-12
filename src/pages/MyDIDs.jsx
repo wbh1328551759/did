@@ -15,7 +15,7 @@ import { useDIDStore } from '../store/didStore'
 import { detectKeyType, isValidPublicKey, getKeyTypeDisplayName } from '../utils/crypto'
 import { TX_STATUS } from '../types/did'
 
-const MyDIDs = () => {
+const MyDIDs = ({ notification } ) => {
   const navigate = useNavigate()
   const location = useLocation()
   const [searchTerm, setSearchTerm] = useState('')
@@ -104,20 +104,20 @@ const MyDIDs = () => {
     setIsLoaded(true)
 
     // 处理从DIDDetail页面返回的更新
-    if (location.state?.updatedDID) {
-      const { showUpdateMessage: shouldShowMessage } = location.state
-
-      // 刷新DID列表以获取最新数据
-      refreshDIDList()
-
-      // 显示更新消息
-      if (shouldShowMessage) {
-        showSuccess('DID updated')
-      }
-
-      // 清除location state
-      window.history.replaceState({}, document.title)
-    }
+    // if (location.state?.updatedDID) {
+    //   const { showUpdateMessage: shouldShowMessage } = location.state
+    //
+    //   // 刷新DID列表以获取最新数据
+    //   refreshDIDList()
+    //
+    //   // 显示更新消息
+    //   if (shouldShowMessage) {
+    //     showSuccess('DID updated')
+    //   }
+    //
+    //   // 清除location state
+    //   window.history.replaceState({}, document.title)
+    // }
   }, [location.state, refreshDIDList, showSuccess])
 
   // 监控交易状态变化
@@ -132,7 +132,7 @@ const MyDIDs = () => {
         showSuccess('Created successfully')
       } else if (txStatus.status === 'failed') {
         // 交易失败
-        alert('Failed to create DID: Transaction not confirmed')
+        notification.error(`Failed to create DID: Transaction not confirmed`, {title: 'Create DID failed'})
       }
     }
   }, [txStatus, monitoringTxid, refreshDIDList, refreshSummary, showSuccess])
@@ -189,17 +189,17 @@ const MyDIDs = () => {
     // 检查DID状态，只有active状态的DID才能访问
     const did = displayDIDs.find(d => d.id === didId)
     if (did && did.status !== 'active') {
-      // alert('只有状态为active的DID才能访问详情页面')
+      notification.error(`Did is not active`, {title: 'Error'})
       return
     }
-    
+
     // 传递完整的 DID 标识符而不是处理后的 id
     const fullDidId = did?.fullDid || didId
-    navigate(`/detail/${encodeURIComponent(fullDidId)}`, { 
-      state: { 
+    navigate(`/detail/${encodeURIComponent(fullDidId)}`, {
+      state: {
         alias,
         didData: did // 传递完整的 DID 数据
-      } 
+      }
     })
   }
 
@@ -254,7 +254,7 @@ const MyDIDs = () => {
 
   const handleInitializeDID = () => {
     if (!walletConnected) {
-      alert('Please connect wallet to create a new DID')
+      notification.error(`Please connect wallet to create a new DID`, {title: 'Error'})
       return
     }
     setShowInitializeModal(true)
@@ -267,7 +267,8 @@ const MyDIDs = () => {
   const handleSubmitDID = async (formData) => {
     try {
       if (!walletConnected || !walletAccount) {
-        alert('Please connect wallet')
+        notification.error(`Please connect wallet first`, {title: 'Error'})
+
         return
       }
 
@@ -275,22 +276,19 @@ const MyDIDs = () => {
       const targetPublicKey = formData.publicKey || publicKey
 
       if (!targetPublicKey) {
-        alert('Public key not available. Please ensure your wallet is connected.')
+        notification.error(`Public key not available. Please ensure your wallet is connected.`, {title: 'Error'})
         return
       }
 
       // 验证公钥格式
       if (!isValidPublicKey(targetPublicKey)) {
-        alert('Invalid public key format')
+        notification.error(`Invalid public key format`, {title: 'Error'})
         return
       }
 
       // 自动检测密钥类型
       const detectedKeyType = detectKeyType(targetPublicKey)
       console.log('Detected key type:', detectedKeyType, 'for public key:', targetPublicKey)
-
-      // 显示创建进度
-      showSuccess('Creating DID...', 10000) // 10秒显示
 
       // 1. 调用创建 DID API 获取 PSBT
       const createResult = await createDID({
@@ -307,6 +305,8 @@ const MyDIDs = () => {
         const signAndPushResult = await signAndPushPsbt(createResult.psbt, formData.alias)
 
         if (signAndPushResult?.commitTxid) {
+          notification.success(`txId: ${signAndPushResult?.commitTxid}`, {title: 'Create DID success!'})
+
           // 开始监控交易状态
           startMonitoring(signAndPushResult.commitTxid)
 
@@ -326,7 +326,7 @@ const MyDIDs = () => {
 
       // 显示错误消息
       const errorMessage = error.message || 'Create DID failed'
-      alert(`Error: ${errorMessage}`)
+      notification.error(errorMessage, {title: 'Create DID Error'})
 
       hideSuccess()
     }
@@ -349,7 +349,8 @@ const MyDIDs = () => {
     } catch (error) {
       console.error('Wallet connection error:', error)
       // 显示错误
-      alert(`Wallet connection failed: ${error.message}`)
+      notification.error(error.message, {title: 'Wallet connection failed'})
+
       throw error
     }
   }

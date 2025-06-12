@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import DetailHeader from '../components/DetailHeader'
 import DetailBackgroundEffects from '../components/DetailBackgroundEffects'
-import SaveNotification from '../components/SaveNotification'
 import IdentityCore from '../components/IdentityCore'
 import NeuralBindings from '../components/NeuralBindings'
 import DIDDocumentViewer from '../components/DIDDocumentViewer'
@@ -11,9 +10,8 @@ import { useDIDManager, usePsbtSigning } from '../hooks/useDID'
 import { useWallet } from '../hooks/useWallet'
 import { encodePublicKeyToMultibase, decodeMultibasePublicKey, isValidMultibaseKey } from '../utils/crypto'
 import didApiService from '../services/didApi'
-import { base58btc } from 'multiformats/bases/base58'
 
-const DIDDetail = () => {
+const DIDDetail = ({ notification }) => {
   const navigate = useNavigate()
   const { id } = useParams()
   const location = useLocation()
@@ -34,9 +32,6 @@ const DIDDetail = () => {
   const [isLoaded, setIsLoaded] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [saveSuccess, setSaveSuccess] = useState(false)
-
-
 
   const [bindings, setBindings] = useState({})
 
@@ -104,16 +99,6 @@ const DIDDetail = () => {
     }
   }, [didList, id, didListLoading, refreshDIDList, location.state])
 
-  // 清除成功提示
-  useEffect(() => {
-    if (saveSuccess) {
-      const timer = setTimeout(() => {
-        setSaveSuccess(false)
-      }, 3000)
-      return () => clearTimeout(timer)
-    }
-  }, [saveSuccess])
-
   // 根据当前 DID 数据构建 DID Document
   const didDocument = currentDID
 
@@ -129,7 +114,6 @@ const DIDDetail = () => {
   }
 
   const handleSave = async () => {
-
     setIsSaving(true)
 
     try {
@@ -160,12 +144,13 @@ const DIDDetail = () => {
             response.revealPsbt || '' // revealPsbt 可能为空
           )
           if (pushResult.commitTxid) {
+            notification.success(`txId: ${pushResult.commitTxid}`, {title: 'Update DID success!'})
+
             startMonitoring(pushResult.commitTxid)
             setVmUpdates([])
             setHasVMChanges(false)
             setOriginalAlias(alias)
             setIsEditing(false)
-            setSaveSuccess(true)
             refreshDIDList()
           } else {
             throw new Error(pushResult.error || 'Failed to sign and push transaction')
@@ -175,7 +160,9 @@ const DIDDetail = () => {
 
     } catch (error) {
       console.error('Update Failed:', error)
-      alert(`Update Failed: ${error.message}`)
+      notification.error(`Update failed: ${error.message}`, {
+        title: 'Update Error',
+      })
     } finally {
       setIsSaving(false)
     }
@@ -188,14 +175,12 @@ const DIDDetail = () => {
     } else {
       // 开始编辑
       setIsEditing(true)
-      setSaveSuccess(false)
     }
   }
 
   const handleCancelEdit = () => {
     setAlias(originalAlias)
     setIsEditing(false)
-    setSaveSuccess(false)
   }
 
   const copyToClipboard = (text) => {
@@ -300,7 +285,9 @@ const DIDDetail = () => {
 
       } catch (error) {
         console.error('Invalid public key format:', error)
-        alert('Invalid public key！')
+        notification.error('Invalid public key format!', {
+          title: 'Format Error'
+        })
       }
 
     } else if (action === 'remove') {
@@ -354,7 +341,6 @@ const DIDDetail = () => {
   return (
     <div className="page sci-fi-detail-page">
       {/* Success notification */}
-      <SaveNotification show={saveSuccess} />
 
       {/* Holographic background */}
       <DetailBackgroundEffects />
