@@ -104,6 +104,7 @@
  * @property {string} alias - 别名
  * @property {string} did - DID 标识符
  * @property {string} controller - 控制者
+ * @property {string} controllerAddress - 控制地址
  * @property {VerificationMethod[]} verificationMethods - 验证方法列表
  * @property {string[]} authentication - 身份验证方法ID列表
  * @property {string[]} assertion - 断言方法ID列表

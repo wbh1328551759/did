@@ -146,10 +146,13 @@ const MyDIDs = () => {
       did: did.did ? `did:btc:${did.did.substring(8, 16)}...${did.did.substring(did.did.length - 4)}` : 'pending...',
       fullDid: did.did,
       controller: did.controller,
+      controllerAddress: did.controllerAddress, // 新增：控制器地址
 
       // 时间信息
       createdDate: did.createdAt ? new Date(did.createdAt * 1000).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
       updatedDate: did.updatedAt ? new Date(did.updatedAt * 1000).toISOString().split('T')[0] : undefined,
+      createdAt: did.createdAt, // 保留原始时间戳
+      updatedAt: did.updatedAt, // 保留原始时间戳
 
       // 状态信息
       status: did.status || 'pending',
@@ -158,7 +161,7 @@ const MyDIDs = () => {
       network: 'signet', // 当前使用 signet 网络
 
       // 控制信息
-      controlAddress: did.controller, // 使用 controller 字段
+      controlAddress: did.controllerAddress || did.controller, // 优先使用 controllerAddress
       controlUtxo: did.controlUtxo,
 
       // 验证方法
@@ -189,7 +192,15 @@ const MyDIDs = () => {
       // alert('只有状态为active的DID才能访问详情页面')
       return
     }
-    navigate(`/detail/${didId}`, { state: { alias } })
+    
+    // 传递完整的 DID 标识符而不是处理后的 id
+    const fullDidId = did?.fullDid || didId
+    navigate(`/detail/${encodeURIComponent(fullDidId)}`, { 
+      state: { 
+        alias,
+        didData: did // 传递完整的 DID 数据
+      } 
+    })
   }
 
   const copyToClipboard = (text) => {

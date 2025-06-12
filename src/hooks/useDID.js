@@ -242,14 +242,14 @@ export const useTransactionStatus = (options = {}) => {
  * @param {import('../types/did.js').QueryDIDRequest} params - 查询参数
  * @param {Object} options - SWR 选项
  */
-export const useMyDIDs = (params, options = {}) => {
+export const useMyDIDs = (params = {}, options = {}) => {
   // 从 zustand store 获取钱包信息
   const { account, publicKey } = useWalletConnection();
 
   // 优先使用传入的参数，否则使用钱包状态
   const queryParams = {
-    page: 1,
-    pageSize: 100,
+    page: params.page || 1,
+    pageSize: params.pageSize || 100,
     // 如果没有传入 address 或 publicKey，使用钱包状态
     address: account,
     // publicKey: params.publicKey || publicKey,
@@ -258,13 +258,18 @@ export const useMyDIDs = (params, options = {}) => {
   // 确保至少有一个必需参数存在（address 或 publicKey）
   const shouldFetch = Boolean(queryParams.address || queryParams.publicKey);
 
+  // 构建包含动态参数的缓存键
+  const cacheKey = shouldFetch
+    ? ['/did/query', queryParams.address, queryParams.publicKey, queryParams.page, queryParams.pageSize]
+    : null;
+
   const {
     data: didListData,
     error: didListError,
     isLoading: didListLoading,
     mutate: mutateDIDList
   } = useSWR(
-    shouldFetch ? '/did/query' : null,
+    cacheKey,
     () => didApiService.queryDIDs(queryParams),
     {
       revalidateOnMount: true,
@@ -513,9 +518,7 @@ export const usePsbtSigning = () => {
         }
       }
     } catch (err) {
-      console.log('errerr', err)
       const errorMessage = err.message || 'Failed'
-      console.log('errorMessage', errorMessage)
       setProcessingState(false, errorMessage)
       console.error('Failed:', err)
 
